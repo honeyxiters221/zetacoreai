@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = fileURLToPath(new URL('.', import.meta.url));
 const PORT = Number(process.env.PORT) || 3000;
-const PUBLIC_APP_URL = (process.env.PUBLIC_APP_URL || process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`).replace(/\/+$/, '');
+const PUBLIC_APP_URL = (process.env.PUBLIC_APP_URL || process.env.URL || process.env.DEPLOY_PRIME_URL || process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`).replace(/\/+$/, '');
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://dlidztiuttjwloyvdyeb.supabase.co';
 const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRsaWR6dGl1dHRqd2xveXZkeWViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI0MjE0MzgsImV4cCI6MjEwNzk5NzQzOH0.Y-SNDQ2qgqCHg9jKXCA5put6kvIbVB4ZAzf5qyppxuI';
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -489,7 +489,7 @@ async function serveStatic(pathname, response) {
   }
 }
 
-const server = http.createServer(async (request, response) => {
+export async function routeRequest(request, response) {
   const url = new URL(request.url, `http://localhost:${PORT}`);
   if (request.method === 'POST' && url.pathname === '/api/chat') return handleChat(request, response);
   if (request.method === 'POST' && url.pathname === '/api/account/delete') return handleAccountDeletion(request, response);
@@ -510,10 +510,13 @@ const server = http.createServer(async (request, response) => {
   }
   if (request.method === 'GET') return serveStatic(url.pathname, response);
   send(response, 405, 'text/plain', 'Method not allowed');
-});
+}
 
-server.listen(PORT, '0.0.0.0', () => {
-  const names = PROVIDERS.map(provider => provider.name).join(', ') || 'NONE (configure provider keys in .env)';
-  console.log(`ZetaCore running → ${PUBLIC_APP_URL}`);
-  console.log(`Providers: ${names}`);
-});
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  const server = http.createServer(routeRequest);
+  server.listen(PORT, '0.0.0.0', () => {
+    const names = PROVIDERS.map(provider => provider.name).join(', ') || 'NONE (configure provider keys in .env)';
+    console.log(`ZetaCore running → ${PUBLIC_APP_URL}`);
+    console.log(`Providers: ${names}`);
+  });
+}
