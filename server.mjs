@@ -13,27 +13,21 @@ const SUPABASE_URL = process.env.SUPABASE_URL || 'https://dlidztiuttjwloyvdyeb.s
 const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRsaWR6dGl1dHRqd2xveXZkeWViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI0MjE0MzgsImV4cCI6MjEwNzk5NzQzOH0.Y-SNDQ2qgqCHg9jKXCA5put6kvIbVB4ZAzf5qyppxuI';
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const HEDGE_MS = 1;
-const GEMINI_TIMEOUT_MS = 15000;
-const OPENROUTER_TIMEOUT_MS = 15000;
+const GEMINI_TIMEOUT_MS = 10000;
+const OPENROUTER_TIMEOUT_MS = 10000;
 const COOLDOWN_MS = 60000;
 const OPENROUTER_PREFERRED_MODELS = [
-  { id: 'qwen/qwen3-coder:free', label: 'Qwen3 Coder 480B (Free)' },
-  { id: 'nvidia/nemotron-3-ultra-550b-a55b:free', label: 'NVIDIA Nemotron 3 Ultra (Free)' },
-  { id: 'meta-llama/llama-3.3-70b-instruct:free', label: 'Llama 3.3 70B Instruct (Free)' },
-  { id: 'poolside/laguna-s-2.1:free', label: 'Poolside Laguna S 2.1 (Free)' },
+  { id: 'poolside/laguna-s-2.1:free', label: 'Poolside Laguna S 2.1 (Free)', supportsImages: false, supportsTemperature: false },
+  { id: 'nvidia/nemotron-3-ultra-550b-a55b:free', label: 'NVIDIA Nemotron 3 Ultra (Free)', supportsImages: false, supportsTemperature: false },
 ];
 const OPENROUTER_MODE_ORDER = {
   instant: [
-    'qwen/qwen3-coder:free',
-    'meta-llama/llama-3.3-70b-instruct:free',
     'poolside/laguna-s-2.1:free',
     'nvidia/nemotron-3-ultra-550b-a55b:free',
   ],
   deep: [
     'nvidia/nemotron-3-ultra-550b-a55b:free',
-    'qwen/qwen3-coder:free',
     'poolside/laguna-s-2.1:free',
-    'meta-llama/llama-3.3-70b-instruct:free',
   ],
 };
 
@@ -103,47 +97,7 @@ function loadCustomProviders() {
 
 PROVIDERS.push(...loadCustomProviders());
 const openRouterProvider = PROVIDERS.find(provider => provider.name === 'openrouter');
-let openRouterModels = [];
-if (openRouterProvider) {
-  try {
-    const response = await fetch('https://openrouter.ai/api/v1/models', {
-      headers: {
-        Authorization: `Bearer ${openRouterProvider.key}`,
-        'HTTP-Referer': PUBLIC_APP_URL,
-        'X-Title': 'ZetaCore AI',
-      },
-      signal: AbortSignal.timeout(8000),
-    });
-    if (!response.ok) {
-      console.error(`[model discovery] OpenRouter catalog HTTP ${response.status}`);
-    } else {
-      const catalog = await response.json();
-      openRouterModels = (Array.isArray(catalog.data) ? catalog.data : [])
-        .filter(model => model && typeof model.id === 'string'
-          && model.architecture?.input_modalities?.includes('text')
-          && model.architecture?.output_modalities?.includes('text')
-          && Number(model.pricing?.prompt) === 0
-          && Number(model.pricing?.completion) === 0
-          && (!model.expiration_date || new Date(model.expiration_date) > new Date()))
-        .map(model => ({
-          id: model.id,
-          label: OPENROUTER_PREFERRED_MODELS.find(preferred => preferred.id === model.id)?.label
-            || model.name,
-          supportsImages: model.architecture?.input_modalities?.includes('image') || false,
-          supportsTemperature: model.supported_parameters?.includes('temperature') || false,
-        }));
-      const preferredOrder = new Map(OPENROUTER_PREFERRED_MODELS.map((model, index) => [model.id, index]));
-      openRouterModels.sort((left, right) =>
-        (preferredOrder.get(left.id) ?? OPENROUTER_PREFERRED_MODELS.length)
-          - (preferredOrder.get(right.id) ?? OPENROUTER_PREFERRED_MODELS.length)
-        || left.label.localeCompare(right.label)
-      );
-      if (!openRouterModels.length) console.warn('[model discovery] No free text models were returned');
-    }
-  } catch (error) {
-    console.error('[model discovery] OpenRouter catalog request failed:', error.message);
-  }
-}
+const openRouterModels = OPENROUTER_PREFERRED_MODELS;
 const cooling = new Map();
 const isCooling = name => (cooling.get(name) || 0) > Date.now();
 const routeDefinitions = PROVIDERS.flatMap(provider => {
@@ -220,7 +174,15 @@ async function askAI(mode, messages, modelId) {
   if (modelId !== 'auto' && !route) return Promise.reject(new Error('Selected model is not available for this mode'));
   const hasImages = messages.some(message => Array.isArray(message.content)
     && message.content.some(part => part && typeof part === 'object' && part.type === 'image_url'));
-  const candidates = route ? [route] : MODEL_ROUTES.filter(item => item.mode === mode);
+  let candidates = route ? [route] : MODEL_ROUTES.filter(item => item.mode === mode);
+  if (!route) {
+    const compatibleOpenRouterRoutes = candidates.filter(item =>
+      item.provider.name === 'openrouter' && (!hasImages || item.supportsImages)
+    );
+    const preferredOpenRouterRoutes = compatibleOpenRouterRoutes.slice(0, 2);
+    candidates = candidates.filter(item => item.provider.name !== 'openrouter')
+      .concat(preferredOpenRouterRoutes);
+  }
   if (hasImages && !candidates.length) {
     return Promise.reject(Object.assign(new Error('No configured model supports image attachments'), { code: 'unsupported_attachments' }));
   }
