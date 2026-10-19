@@ -1,0 +1,1631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ZetaCore AI</title>
+<link rel="icon" type="image/svg+xml" href="zetacore-mark.svg">
+<style>
+:root{
+  --bg:#090a10;
+  --side:#0c0d14;
+  --surface:#12141d;
+  --surface-2:#1a1d29;
+  --border:#202332;
+  --border-2:#303447;
+  --text:#f1f2f8;
+  --muted:#a0a4b5;
+  --dim:#686d80;
+  --accent:#a6b4ff;
+  --ease:cubic-bezier(.2,.8,.2,1);
+  --radius:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:radial-gradient(ellipse at 65% -20%,rgba(86,101,181,.13),transparent 48%),var(--bg);color:var(--text);overflow:hidden;-webkit-font-smoothing:antialiased;font-size:14px}
+button,input,textarea,select{font-family:inherit;color:inherit}
+button{cursor:pointer}
+button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-thumb{background:#262626;border-radius:8px}
+::-webkit-scrollbar-track{background:transparent}
+
+.app{display:flex;height:100vh;position:relative}
+
+/* ---------- sidebar ---------- */
+aside{width:264px;flex-shrink:0;background:var(--side);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:14px 12px;transition:transform .35s var(--ease);z-index:20}
+.brand{display:flex;align-items:center;gap:10px;padding:6px 8px 16px;font-weight:700;font-size:15px;letter-spacing:-.01em}
+.mark{width:34px;height:34px;object-fit:contain;flex-shrink:0}
+.side-btn{display:flex;align-items:center;gap:10px;width:100%;padding:9px 10px;border-radius:9px;background:transparent;border:1px solid transparent;color:var(--text);font-size:13.5px;font-weight:500;text-align:left;transition:background .2s,border-color .2s,transform .2s var(--ease)}
+.side-btn:hover{background:var(--surface);border-color:var(--border)}
+.side-btn:active{transform:scale(.98)}
+.side-btn .ic{width:18px;text-align:center;color:var(--muted);transition:transform .35s var(--ease),color .2s}
+.side-btn:hover .ic{color:var(--text);transform:rotate(90deg)}
+.side-btn.primary{background:var(--surface);border-color:var(--border-2)}
+
+.section{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);padding:18px 10px 8px}
+.history{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:2px}
+.history-group[hidden]{display:none}
+.history-group .section{padding-top:15px}
+.hist-row{display:flex;align-items:center;gap:4px;padding:3px 5px;border-radius:9px;animation:fadeSlide .35s var(--ease) both}
+.hist-row:hover,.hist-row.active{background:var(--surface)}
+.hist{flex:1;min-width:0;padding:5px;color:var(--muted);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;background:none;border:0;text-align:left}
+.hist-row:hover .hist,.hist-row.active .hist{color:var(--text)}
+.hist-pin{flex:none;color:#b8c5ff;font-size:10px}
+.hist-actions{display:flex;gap:1px;opacity:0;transition:opacity .15s}
+.hist-row:hover .hist-actions,.hist-row:focus-within .hist-actions{opacity:1}
+.hist-action{width:25px;height:25px;display:grid;place-items:center;border:0;border-radius:6px;background:transparent;color:var(--muted);font-size:12px}
+.hist-action:hover{background:var(--surface-2);color:var(--text)}
+.hist-action.danger:hover{color:#ff9696}
+@media(hover:none){.hist-actions{opacity:1}}
+.empty-hist{font-size:12.5px;color:var(--dim);padding:6px 10px}
+
+.side-foot{border-top:1px solid var(--border);padding-top:12px;margin-top:10px}
+.account-card{display:flex;align-items:center;gap:9px;margin-top:12px;padding:9px 8px 2px}
+.account-avatar{width:34px;height:34px;flex:none;border-radius:50%;display:grid;place-items:center;background:linear-gradient(140deg,#7188ff,#8b5cff);color:#fff;font-size:12px;font-weight:750}
+.account-copy{min-width:0;flex:1}
+.account-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12.5px;font-weight:650}
+.account-email{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:2px;color:var(--muted);font-size:10.5px}
+.account-plan{margin-top:3px;color:#b8c5ff;font-size:10px;font-weight:650}
+.account-settings{width:30px;height:30px;border:1px solid var(--border);border-radius:8px;background:transparent;color:var(--muted);font-size:15px;transition:all .2s}
+.account-settings:hover{background:var(--surface-2);color:var(--text);border-color:var(--border-2)}
+.plan{display:flex;align-items:center;gap:8px;margin-top:12px;padding:6px 4px;font-size:12.5px;color:var(--muted)}
+.plan i{width:6px;height:6px;border-radius:50%;background:#fff;animation:pulse 2.4s infinite}
+.plan .keys{margin-left:auto;color:var(--dim);font-size:11px}
+
+/* ---------- main ---------- */
+main{flex:1;display:flex;flex-direction:column;min-width:0;position:relative}
+.topbar{height:56px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 16px;border-bottom:1px solid var(--border);background:rgba(10,10,10,.85);backdrop-filter:blur(10px);position:relative;z-index:5;flex-shrink:0}
+.left-tools{display:flex;align-items:center;gap:10px;min-width:0}
+.icon{width:34px;height:34px;border-radius:9px;border:1px solid transparent;background:none;color:var(--muted);display:grid;place-items:center;font-size:15px;transition:background .2s,color .2s,border-color .2s,transform .25s var(--ease);flex-shrink:0}
+.icon:hover{background:var(--surface);color:var(--text);border-color:var(--border)}
+.icon:active{transform:scale(.92)}
+.menu-btn{display:none}
+.model-picker{position:relative;min-width:0}
+.model-picker-trigger{display:flex;align-items:center;gap:10px;min-width:178px;max-width:280px;height:40px;padding:0 11px;border:1px solid var(--border-2);border-radius:11px;background:linear-gradient(145deg,rgba(28,28,31,.96),rgba(15,15,17,.96));text-align:left;transition:border-color .2s,background .2s,box-shadow .2s}
+.model-picker-trigger:hover,.model-picker-trigger[aria-expanded="true"]{border-color:#565b6a;background:#1c1c21;box-shadow:0 7px 24px rgba(0,0,0,.24)}
+.model-picker-icon{width:25px;height:25px;flex:none;display:grid;place-items:center;border:1px solid rgba(255,255,255,.09);border-radius:8px;background:linear-gradient(145deg,rgba(128,150,255,.2),rgba(153,102,255,.15));color:#d5ddff;font-size:13px}
+.model-picker-copy{display:flex;flex:1;min-width:0;flex-direction:column;gap:2px}
+.model-picker-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12.5px;font-weight:650}
+.model-picker-meta{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--dim);font-size:10px}
+.model-picker-chevron{width:14px;height:14px;flex:none;color:var(--muted);transition:transform .2s}
+.model-picker-trigger[aria-expanded="true"] .model-picker-chevron{transform:rotate(180deg)}
+.model-menu{position:absolute;top:calc(100% + 9px);left:0;width:min(320px,calc(100vw - 28px));max-height:min(440px,calc(100vh - 84px));overflow:auto;padding:8px;border:1px solid var(--border-2);border-radius:14px;background:rgba(15,16,20,.98);box-shadow:0 20px 60px rgba(0,0,0,.58);z-index:40;animation:pop .18s var(--ease) both}
+.model-menu[hidden]{display:none}
+.model-menu-head{display:flex;align-items:center;justify-content:space-between;padding:7px 8px 9px;color:var(--muted);font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase}
+.model-mode-badge{padding:4px 7px;border:1px solid var(--border);border-radius:999px;color:#c8d2ff;font-size:9px;letter-spacing:.03em;text-transform:none}
+.model-option{display:flex;align-items:center;gap:10px;width:100%;padding:10px;border:1px solid transparent;border-radius:10px;background:transparent;color:var(--text);text-align:left;transition:background .18s,border-color .18s}
+.model-option:hover{background:rgba(255,255,255,.055);border-color:var(--border)}
+.model-option.selected{background:rgba(132,151,255,.11);border-color:rgba(132,151,255,.25)}
+.model-option-icon{width:28px;height:28px;flex:none;display:grid;place-items:center;border-radius:9px;background:rgba(255,255,255,.06);color:#cad4ff;font-size:13px}
+.model-option-copy{min-width:0;flex:1}
+.model-option-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;font-weight:650}
+.model-option-provider{margin-top:3px;color:var(--muted);font-size:10px}
+.model-option-check{color:#b9c7ff;font-size:13px}
+.model-menu-empty{padding:10px 8px 8px;border-top:1px solid var(--border);margin-top:5px}
+.model-menu-empty p{color:var(--muted);font-size:11px;line-height:1.5}
+.model-menu-empty button{margin-top:9px;padding:7px 9px;border:1px solid rgba(151,170,255,.24);border-radius:8px;background:rgba(123,146,255,.1);color:#d4dcff;font-size:11px;font-weight:650}
+.model-menu-empty button:hover{background:rgba(123,146,255,.18)}
+
+/* mode segmented control */
+.seg{display:flex;padding:3px;background:var(--surface);border:1px solid var(--border);border-radius:10px}
+.seg button{background:none;border:none;padding:6px 12px;border-radius:7px;font-size:12.5px;font-weight:600;color:var(--muted);display:flex;align-items:center;gap:6px;white-space:nowrap;transition:background .3s var(--ease),color .3s,transform .2s var(--ease)}
+.seg button:hover{color:var(--text)}
+.seg button:active{transform:scale(.96)}
+.seg button.active{background:#fff;color:#000;box-shadow:0 2px 10px -2px rgba(255,255,255,.25)}
+
+/* chat area */
+#chat{flex:1;overflow-y:auto;scroll-behavior:smooth;background:radial-gradient(ellipse at 50% 0,rgba(74,86,150,.055),transparent 54%)}
+.inner{max-width:760px;margin:0 auto;padding:28px 24px 12px;min-height:100%}
+
+/* hero */
+.hero{min-height:calc(100vh - 230px);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px 0}
+.hero .mark-lg{width:56px;height:56px;border-radius:16px;background:#fff;color:#000;display:grid;place-items:center;font-size:24px;font-weight:800;animation:floaty 5s ease-in-out infinite, fadeUp .7s var(--ease) both;box-shadow:0 20px 50px -18px rgba(255,255,255,.35)}
+.hero h1{font-size:30px;font-weight:700;letter-spacing:-.025em;margin-top:24px;animation:fadeUp .7s .08s var(--ease) both}
+.hero .sub{color:var(--muted);margin-top:8px;font-size:14.5px;min-height:22px;animation:fadeUp .7s .16s var(--ease) both}
+.caret::after{content:"";display:inline-block;width:2px;height:1em;background:#fff;margin-left:3px;vertical-align:-2px;animation:blink 1s steps(2) infinite}
+
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:34px;width:100%;max-width:640px}
+.card{background:linear-gradient(145deg,rgba(24,26,39,.9),rgba(18,20,29,.9));border:1px solid var(--border);border-radius:var(--radius);padding:14px 14px 13px;text-align:left;transition:transform .3s var(--ease),border-color .25s,background .25s,box-shadow .25s;animation:fadeUp .6s var(--ease) both}
+.card:hover{transform:translateY(-3px);border-color:rgba(166,180,255,.35);background:var(--surface-2);box-shadow:0 12px 28px rgba(0,0,0,.2)}
+.card:active{transform:scale(.97)}
+.card b{display:block;font-size:13px;font-weight:600;margin-bottom:4px}
+.card span{font-size:12.5px;color:var(--muted);line-height:1.45}
+
+/* messages */
+.msg{display:flex;gap:12px;margin-bottom:22px;animation:fadeUp .4s var(--ease) both}
+.msg.user{justify-content:flex-end}
+.avatar{width:28px;height:28px;border-radius:8px;flex-shrink:0;display:grid;place-items:center;font-size:11px;font-weight:800;background:#fff;color:#000;margin-top:2px}
+.msg-main{flex:1;min-width:0}
+.msg-label{margin:0 0 5px;color:var(--muted);font-size:11px;font-weight:650;letter-spacing:.01em}
+.msg.user .msg-main{flex:none;max-width:78%;display:flex;flex-direction:column;align-items:flex-end}
+.msg.user .msg-label{text-align:right}
+.bubble{line-height:1.7;font-size:14.5px;min-width:0;max-width:100%;word-break:break-word;white-space:pre-wrap;color:#e4e4e4}
+.msg.user .bubble{background:var(--surface-2);border:1px solid var(--border-2);padding:10px 14px;border-radius:14px 14px 4px 14px;max-width:100%}
+.msg.ai .bubble{padding-top:3px}
+.ai-rich{white-space:normal}
+.prose{margin:0 0 10px}
+.analysis-status{display:flex;align-items:center;gap:9px;color:#c4c8d8;font-size:13px;animation:fadeUp .25s var(--ease) both}
+.analysis-dots{display:flex;gap:4px}
+.analysis-dots span{width:5px;height:5px;border-radius:50%;background:var(--accent);animation:bounce 1.15s infinite}
+.analysis-dots span:nth-child(2){animation-delay:.15s}
+.analysis-dots span:nth-child(3){animation-delay:.3s}
+
+/* code */
+.cb{border:1px solid var(--border);border-radius:11px;overflow:hidden;margin:6px 0 4px;background:#0b0b0b}
+.cb-head{display:flex;align-items:center;justify-content:space-between;padding:6px 10px 6px 12px;background:var(--surface);border-bottom:1px solid var(--border);font-size:12px;color:var(--muted)}
+.cb-actions{display:flex;gap:6px}
+.cb-actions button{background:none;border:1px solid var(--border-2);color:var(--muted);font-size:12px;padding:3px 9px;border-radius:6px;transition:all .2s var(--ease)}
+.cb-actions button:hover{background:#fff;color:#000;border-color:#fff}
+.cb-actions button:active{transform:scale(.94)}
+.cb pre{margin:0;padding:13px 14px;overflow-x:auto;font:12.8px/1.6 ui-monospace,Consolas,"Cascadia Code",monospace;color:#d4d4d4;white-space:pre}
+.out{border:1px solid var(--border);border-radius:11px;background:#070707;margin:6px 0 14px;overflow:hidden;animation:fadeUp .35s var(--ease) both}
+.out-head{font-size:10.5px;text-transform:uppercase;letter-spacing:.1em;color:var(--dim);padding:6px 12px;border-bottom:1px solid var(--border)}
+.out pre{margin:0;padding:11px 12px;font:12.8px/1.5 ui-monospace,Consolas,monospace;white-space:pre-wrap;color:#cfcfcf;min-height:38px}
+.frame{width:100%;height:260px;border:0;background:#fff;display:block}
+
+/* composer */
+.composer-wrap{position:relative;isolation:isolate;padding:8px 24px 16px;flex-shrink:0}
+.composer-wrap::before{content:"";position:absolute;z-index:-1;left:50%;bottom:24px;width:min(720px,80%);height:74px;transform:translateX(-50%);border-radius:50%;background:linear-gradient(100deg,rgba(107,133,255,.2),rgba(150,111,255,.18),rgba(107,133,255,.2));filter:blur(32px);opacity:.55;pointer-events:none;animation:composerAura 9s ease-in-out infinite}
+.composer{position:relative;max-width:760px;margin:0 auto;background:linear-gradient(145deg,rgba(22,24,36,.98),rgba(16,18,27,.98));border:1px solid var(--border-2);border-radius:18px;padding:10px 10px 8px 14px;box-shadow:0 16px 48px rgba(0,0,0,.22);transition:border-color .25s,box-shadow .3s,transform .3s var(--ease)}
+.composer:focus-within{border-color:rgba(166,180,255,.5);box-shadow:0 0 0 4px rgba(135,151,255,.07),0 18px 54px rgba(0,0,0,.28)}
+textarea{width:100%;background:none;border:none;outline:none;resize:none;font-size:14.5px;line-height:1.55;max-height:200px;min-height:24px;padding:4px 2px;color:var(--text);-webkit-appearance:none;appearance:none;overflow-y:auto}
+textarea:focus-visible{outline:none;outline-offset:0}
+textarea::placeholder{color:var(--dim)}
+.tools{display:flex;align-items:center;justify-content:space-between;margin-top:6px}
+.tool-left{display:flex;align-items:center;gap:6px}
+.attach-btn{display:flex;align-items:center;gap:6px;padding:5px 9px;border:1px solid var(--border-2);border-radius:8px;background:transparent;color:var(--muted);font-size:12px;transition:all .2s var(--ease)}
+.attach-btn:hover{color:var(--text);border-color:rgba(166,180,255,.45);background:rgba(166,180,255,.08)}
+.attach-btn svg{width:15px;height:15px}
+.file-input{display:none}
+.attachment-list{display:flex;flex-wrap:wrap;gap:7px;padding:2px 0 9px}
+.attachment-chip{display:flex;align-items:center;gap:7px;max-width:210px;padding:5px 7px 5px 9px;border:1px solid var(--border-2);border-radius:9px;background:rgba(255,255,255,.035);color:var(--muted);font-size:11px;animation:fadeUp .2s var(--ease) both}
+.attachment-chip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.attachment-chip button{width:19px;height:19px;border:0;border-radius:6px;background:transparent;color:var(--muted);font-size:13px}
+.attachment-chip button:hover{background:rgba(255,255,255,.1);color:var(--text)}
+.message-attachments{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.message-attachment{padding:3px 7px;border:1px solid var(--border);border-radius:7px;color:var(--muted);font-size:11px}
+.service-notice{display:none;max-width:760px;margin:10px auto 0;padding:10px 13px;border:1px solid rgba(255,177,110,.25);border-radius:10px;background:rgba(255,177,110,.07);color:#f1c79e;font-size:12px;line-height:1.5;animation:fadeUp .25s var(--ease) both}
+.service-notice.show{display:block}
+.composer-wrap.dragging .composer{border-color:var(--accent);box-shadow:0 0 0 4px rgba(135,151,255,.12)}
+.wand{display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:8px;border:1px solid var(--border-2);background:none;color:var(--muted);font-size:12px;font-weight:500;transition:all .25s var(--ease)}
+.wand:hover{color:var(--text);border-color:#444;background:var(--surface-2)}
+.wand:active{transform:scale(.95)}
+.wand .sp{display:inline-block;transition:transform .5s var(--ease)}
+.wand:hover .sp{transform:rotate(20deg) scale(1.15)}
+.wand.on{background:#fff;color:#000;border-color:#fff}
+.wand.busy .sp{animation:spin .8s linear infinite}
+.send{width:32px;height:32px;border-radius:9px;border:none;background:#fff;color:#000;display:grid;place-items:center;font-size:16px;font-weight:700;transition:transform .2s var(--ease),opacity .2s,background .2s}
+.send:hover{transform:translateY(-1px)}
+.send:active{transform:scale(.9)}
+.send:disabled{background:var(--surface-2);color:var(--dim);transform:none;cursor:not-allowed}
+.foot{text-align:center;font-size:11.5px;color:var(--dim);margin-top:9px}
+.disclaimer{display:block;margin-top:4px;color:#85899b;font-size:11px}
+
+/* modal */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.65);backdrop-filter:blur(6px);display:none;place-items:center;z-index:50;padding:16px}
+.modal-bg.show{display:grid;animation:fade .25s both}
+.modal{width:min(500px,100%);max-height:86vh;overflow:auto;background:#0c0c0c;border:1px solid var(--border-2);border-radius:16px;padding:20px;animation:pop .35s var(--ease) both}
+.settings-modal{width:min(560px,100%)}
+.settings-section{padding:15px 0;border-top:1px solid var(--border)}
+.settings-section h3{margin-bottom:10px;font-size:13px}
+.settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 10px}
+.settings-field{width:100%;height:40px;padding:0 11px;background:var(--surface);border:1px solid var(--border);border-radius:9px;color:var(--text);outline:none;margin-top:7px}
+.settings-field:focus{border-color:#555}
+.settings-field::placeholder{color:var(--dim)}
+.settings-field option{background:#111;color:var(--text)}
+.settings-field[type=date]{color-scheme:dark}
+.settings-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.settings-status{min-height:17px;margin-top:7px;color:var(--muted);font-size:12px}
+.settings-danger{color:#ff9696;border-color:rgba(255,120,120,.3)}
+.settings-danger:hover{background:rgba(125,35,35,.22)}
+.settings-note{margin:5px 0 0;color:var(--dim);font-size:11px;line-height:1.45}
+.model-setup-modal{max-height:88vh;overflow:auto}
+.model-config{overflow-x:auto;margin-top:8px;padding:11px;border:1px solid var(--border);border-radius:9px;background:#09090b;color:#d4dcff;font:11px/1.6 ui-monospace,SFMono-Regular,Consolas,monospace;white-space:pre}
+.model-setup-modal code{color:#d4dcff}
+.model-setup-modal a{color:#c7d1ff;text-decoration:none}
+.model-setup-modal a:hover{text-decoration:underline}
+@media(max-width:480px){.settings-grid{grid-template-columns:1fr}.settings-modal{max-height:92vh}}
+.modal-head{display:flex;justify-content:space-between;align-items:center}
+.modal-head h2{font-size:16px;font-weight:700}
+.modal p.hint{color:var(--muted);font-size:12.5px;margin:6px 0 12px;line-height:1.55}
+.fld{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-size:13.5px;outline:none;margin-top:8px;transition:border-color .2s;resize:vertical}
+.fld:focus{border-color:#4a4a4a}
+.mem{display:flex;justify-content:space-between;gap:10px;border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-top:8px;background:var(--surface);animation:fadeUp .3s var(--ease) both}
+.mem b{font-size:13px;font-weight:600}
+.mem .c{font-size:12.5px;color:var(--muted);white-space:pre-wrap;margin-top:3px}
+.note{font-size:12px;color:var(--dim);margin-top:10px}
+.modal-foot{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}
+.btn{padding:9px 14px;border-radius:9px;font-size:13px;font-weight:600;border:1px solid var(--border-2);background:var(--surface);transition:transform .2s var(--ease),background .2s}
+.btn:hover{background:var(--surface-2);transform:translateY(-1px)}
+.btn.solid{background:#fff;color:#000;border-color:#fff}
+.btn.solid:hover{background:#e6e6e6}
+
+.toast{position:fixed;bottom:86px;left:50%;transform:translate(-50%,16px);background:#fff;color:#000;padding:9px 14px;border-radius:9px;font-size:12.5px;font-weight:600;opacity:0;transition:all .35s var(--ease);z-index:60;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.confirm-bg{z-index:80}
+.confirm-modal{width:min(100%,420px);animation:pop .24s var(--ease) both}
+.confirm-modal h2{font-size:17px;font-weight:700}
+.confirm-modal .hint{margin:8px 0 18px}
+.confirm-icon{width:42px;height:42px;display:grid;place-items:center;margin-bottom:14px;border:1px solid rgba(255,135,135,.25);border-radius:14px;background:rgba(255,92,92,.1);color:#ffaaaa;font-size:20px}
+.confirm-modal .modal-foot{justify-content:flex-end}
+.confirm-modal .btn:focus-visible{outline:2px solid #c3d1ff;outline-offset:3px}
+
+.ripple{position:absolute;border-radius:50%;background:rgba(255,255,255,.22);transform:scale(0);animation:ripple .6s linear;pointer-events:none}
+
+.overlay{display:none}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes fadeSlide{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:none}}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+@keyframes pop{from{opacity:0;transform:scale(.96) translateY(8px)}to{opacity:1;transform:none}}
+@keyframes bounce{0%,80%,100%{transform:translateY(0);opacity:.25}40%{transform:translateY(-5px);opacity:1}}
+@keyframes blink{50%{opacity:0}}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,255,255,.45)}50%{box-shadow:0 0 0 5px rgba(255,255,255,0)}}
+@keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+@keyframes composerAura{0%,100%{opacity:.38;transform:translateX(-50%) scaleX(.92)}50%{opacity:.68;transform:translateX(-50%) scaleX(1.06)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes ripple{to{transform:scale(4);opacity:0}}
+
+@media (max-width:860px){
+  aside{position:fixed;top:0;bottom:0;left:0;transform:translateX(-102%);box-shadow:none}
+  aside.open{transform:none;box-shadow:24px 0 60px rgba(0,0,0,.8)}
+  .menu-btn{display:grid}
+  .overlay.show{display:block;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:15;animation:fade .25s both}
+  .cards{grid-template-columns:1fr}
+  .msg.user .msg-main{max-width:90%}
+}
+@media (max-width:560px){
+  .topbar{gap:6px;padding:0 10px}
+  .inner{padding:20px 14px 8px}
+  .composer-wrap{padding:6px 12px 12px}
+  .seg button{padding:6px 6px;font-size:11px;gap:4px}
+  .left-tools{gap:6px}
+  .model-picker-trigger{width:150px;min-width:0;flex:none}
+  .model-menu{left:auto;right:0}
+  .model-picker-meta{display:none}
+}
+@media(max-width:380px){
+  .topbar{gap:4px;padding:0 6px}
+  #vaultBtn{display:none}
+  .model-picker-trigger{width:128px}
+  .model-picker-icon{display:none}
+  .seg button{padding:5px;font-size:10px;gap:3px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside id="sidebar">
+    <div class="brand"><img class="mark" src="zetacore-mark.svg" alt="">ZetaCore AI</div>
+    <button class="side-btn primary" id="newChat"><span class="ic">+</span>New chat</button>
+    <button class="side-btn" id="openVault" style="margin-top:4px"><span class="ic">◎</span>Memory Vault</button>
+    <div class="history" id="history">
+      <div class="history-group" id="pinnedGroup" hidden><div class="section">Pinned</div><div id="pinnedChats"></div></div>
+      <div class="history-group" id="recentGroup"><div class="section">Recent</div><div id="recentChats"><div class="empty-hist">No chats yet</div></div></div>
+      <div class="history-group" id="archivedGroup" hidden><div class="section">Archived</div><div id="archivedChats"></div></div>
+    </div>
+    <div class="side-foot">
+        <div class="plan"><i></i>ZetaCore Free <span class="keys" id="keyCount"></span></div>
+      <div class="account-card" id="accountCard">
+        <div class="account-avatar" id="accountAvatar">Z</div>
+        <div class="account-copy">
+          <div class="account-name" id="accountName">Account</div>
+          <div class="account-email" id="accountEmail"></div>
+          <div class="account-plan">Free plan</div>
+        </div>
+        <button class="account-settings" id="openSettings" type="button" title="Account settings" aria-label="Account settings">⚙</button>
+      </div>
+    </div>
+  </aside>
+  <div class="overlay" id="overlay"></div>
+
+  <main>
+    <div class="topbar">
+      <div class="left-tools">
+        <button class="icon menu-btn" id="menuBtn" aria-label="Menu">☰</button>
+        <div class="model-picker" id="modelPicker">
+          <button class="model-picker-trigger" id="modelPickerTrigger" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="modelMenu">
+            <span class="model-picker-icon" aria-hidden="true">✦</span>
+            <span class="model-picker-copy">
+              <span class="model-picker-name" id="modelPickerName">Automatic</span>
+              <span class="model-picker-meta" id="modelPickerMeta">Gemini first · OpenRouter free fallback</span>
+            </span>
+            <svg class="model-picker-chevron" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="m4 6 4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <div class="model-menu" id="modelMenu" role="listbox" aria-label="Available AI models" hidden>
+            <div class="model-menu-head"><span>Choose a model</span><span class="model-mode-badge" id="modelModeBadge">Instant</span></div>
+            <div id="modelOptions"></div>
+            <div class="model-menu-empty" id="modelMenuEmpty" hidden>
+              <p>No AI providers are configured yet. Add a provider key to the server’s <code>.env</code> file to enable models.</p>
+              <button id="openModelSetup" type="button">How to add models</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="seg" id="seg" role="tablist">
+        <button class="active" data-mode="instant" role="tab">⚡ Instant</button>
+        <button data-mode="deep" role="tab">◈ Deep Reason</button>
+      </div>
+      <button class="icon" id="vaultBtn" title="Memory Vault" aria-label="Memory Vault">◎</button>
+    </div>
+
+    <div id="chat"><div class="inner" id="thread"></div></div>
+
+    <div class="composer-wrap">
+      <div class="composer">
+        <div class="attachment-list" id="attachmentList" hidden></div>
+        <textarea id="input" rows="1" placeholder="Apna sawaal ya task yahan likhein..."></textarea>
+        <div class="tools">
+          <div class="tool-left">
+            <input class="file-input" id="fileInput" type="file" multiple accept="image/png,image/jpeg,image/webp,image/gif,.txt,.md,.csv,.json">
+            <button class="attach-btn" id="attachBtn" type="button" title="Attach up to 4 images or text files (PNG, JPG, WEBP, GIF, TXT, MD, CSV, JSON)" aria-label="Attach images or text files">
+              <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="m7.5 10.8 5.2-5.2a3 3 0 0 1 4.2 4.2l-7.4 7.4a4.5 4.5 0 0 1-6.4-6.4l7.1-7.1" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Attach
+            </button>
+            <button class="wand" id="wand" title="Prompt ko engineer-level banaye"><span class="sp">✦</span>Optimize</button>
+          </div>
+          <button class="send" id="send" disabled aria-label="Send">↑</button>
+        </div>
+      </div>
+      <div class="foot disclaimer" id="modeHint">ZetaCore AI Can Make Mistakes.</div>
+      <div class="service-notice" id="serviceNotice" role="status" aria-live="polite"></div>
+    </div>
+  </main>
+</div>
+
+<div class="modal-bg" id="vaultModal">
+  <div class="modal">
+    <div class="modal-head"><h2>Memory Vault</h2><button class="icon" id="closeVault" aria-label="Close">✕</button></div>
+    <p class="hint">Project, hardware aur coding preferences yahan save karein. Har reply ke saath ye automatically apply hote hain. Data is browser mein rehta hai.</p>
+    <div id="memList"></div>
+    <input class="fld" id="memTitle" placeholder="Title (e.g. Hardware, Stack, Style)">
+    <textarea class="fld" id="memContent" rows="3" placeholder="Details (e.g. Ryzen 7 5800X, 32GB RAM, RTX 3060. Python 3.12 with type hints.)"></textarea>
+    <div class="modal-foot">
+      <button class="btn" id="memClear">Clear</button>
+      <button class="btn solid" id="memSave">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="settingsModal">
+  <section class="modal settings-modal" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+    <div class="modal-head"><h2 id="settingsTitle">Account settings</h2><button class="icon" id="closeSettings" aria-label="Close">✕</button></div>
+    <p class="hint" id="settingsIdentity"></p>
+    <section class="settings-section">
+      <h3>Personal information</h3>
+      <div class="settings-grid">
+        <input class="settings-field" id="settingsName" autocomplete="name" placeholder="Full name" aria-label="Full name">
+        <input class="settings-field" id="settingsDob" type="date" aria-label="Date of birth">
+        <select class="settings-field" id="settingsGender" aria-label="Gender">
+          <option value="">Select gender</option>
+          <option value="female">Female</option>
+          <option value="male">Male</option>
+          <option value="non_binary">Non-binary</option>
+          <option value="prefer_not_to_say">Prefer not to say</option>
+        </select>
+      </div>
+      <div class="settings-actions"><button class="btn solid" id="saveProfile" type="button">Save profile</button></div>
+      <div class="settings-status" id="profileStatus" role="status" aria-live="polite"></div>
+    </section>
+    <section class="settings-section">
+      <h3>Email address</h3>
+      <input class="settings-field" id="settingsEmail" type="email" autocomplete="email" placeholder="New email address">
+      <div class="settings-actions"><button class="btn" id="changeEmail" type="button">Change email</button></div>
+      <div class="settings-status" id="emailStatus" role="status" aria-live="polite"></div>
+      <p class="settings-note">Supabase will send a verification link before the new address becomes active.</p>
+    </section>
+    <section class="settings-section">
+      <h3>Phone number</h3>
+      <input class="settings-field" id="settingsPhone" type="tel" autocomplete="tel" placeholder="Phone number, e.g. +15551234567">
+      <div class="settings-actions"><button class="btn" id="sendPhoneCode" type="button">Send verification code</button></div>
+      <div id="phoneVerifyFields" class="hidden">
+        <input class="settings-field" id="phoneCode" inputmode="numeric" autocomplete="one-time-code" placeholder="Verification code">
+        <div class="settings-actions"><button class="btn solid" id="verifyPhone" type="button">Verify phone</button></div>
+      </div>
+      <div class="settings-status" id="phoneStatus" role="status" aria-live="polite"></div>
+    </section>
+    <section class="settings-section">
+      <h3>Change password</h3>
+      <input class="settings-field" id="currentPassword" type="password" autocomplete="current-password" placeholder="Current password (if set)">
+      <div class="settings-grid">
+        <input class="settings-field" id="newPassword" type="password" autocomplete="new-password" placeholder="New password">
+        <input class="settings-field" id="confirmNewPassword" type="password" autocomplete="new-password" placeholder="Confirm new password">
+      </div>
+      <div class="settings-actions"><button class="btn" id="changePassword" type="button">Update password</button></div>
+      <div class="settings-status" id="passwordStatus" role="status" aria-live="polite"></div>
+    </section>
+    <section class="settings-section">
+      <h3>Sign out</h3>
+      <p class="settings-note">Sign out of your ZetaCore AI account on this device.</p>
+      <div class="settings-actions"><button class="btn" id="accountSignOut" type="button">Sign out</button></div>
+    </section>
+    <section class="settings-section">
+      <h3>Account status</h3>
+      <p class="settings-note">Temporary deactivation signs you out and blocks chat until you reactivate by signing in again.</p>
+      <div class="settings-actions"><button class="btn settings-danger" id="deactivateAccount" type="button">Deactivate temporarily</button></div>
+      <div class="settings-status" id="deactivateStatus" role="status" aria-live="polite"></div>
+    </section>
+    <section class="settings-section">
+      <h3>Delete account permanently</h3>
+      <p class="settings-note">Permanently deletes your Supabase Auth account. This cannot be undone. Enter your current account email to confirm.</p>
+      <input class="settings-field" id="deleteConfirmEmail" type="email" autocomplete="off" placeholder="Your current account email">
+      <div class="settings-actions"><button class="btn settings-danger" id="deleteAccount" type="button">Delete account permanently</button></div>
+      <div class="settings-status" id="deleteStatus" role="status" aria-live="polite"></div>
+    </section>
+  </section>
+</div>
+
+<div class="modal-bg" id="modelSetupModal">
+  <section class="modal settings-modal model-setup-modal" role="dialog" aria-modal="true" aria-labelledby="modelSetupTitle">
+    <div class="modal-head"><h2 id="modelSetupTitle">Add AI models</h2><button class="icon" id="closeModelSetup" aria-label="Close">✕</button></div>
+    <p class="hint">Provider keys stay on your server and are never sent to users’ browsers. Add a key to <code>.env</code>, save the file, restart the ZetaCore server, then refresh this page.</p>
+    <section class="settings-section">
+      <h3>Gemini</h3>
+      <p class="settings-note">Get an API key from <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer">Google AI Studio</a>, then set it in your local <code>.env</code> file:</p>
+      <pre class="model-config">GEMINI_API_KEY=your_gemini_api_key</pre>
+    </section>
+    <section class="settings-section">
+      <h3>OpenRouter</h3>
+      <p class="settings-note">Create an <a href="https://openrouter.ai/keys" target="_blank" rel="noopener noreferrer">OpenRouter API key</a>, then set:</p>
+      <pre class="model-config">OPENROUTER_API_KEY=your_openrouter_api_key</pre>
+    </section>
+    <section class="settings-section">
+      <h3>Custom OpenAI-compatible model</h3>
+      <p class="settings-note">Add a provider definition and its matching key variable. Duplicate entries to add multiple models.</p>
+      <pre class="model-config">CUSTOM_MODELS=[{"id":"my-model","label":"My Model","mode":"instant","url":"https://api.example.com/v1/chat/completions","model":"vendor/model-id","apiKeyEnv":"MY_MODEL_API_KEY"}]
+MY_MODEL_API_KEY=your_provider_api_key</pre>
+      <p class="settings-note">Use <code>mode</code> as <code>instant</code> or <code>deep</code>. Never paste API keys into chat or browser code.</p>
+    </section>
+    <div class="modal-foot"><button class="btn solid" id="doneModelSetup" type="button">Got it</button></div>
+  </section>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="modal-bg confirm-bg" id="confirmModal">
+  <section class="modal confirm-modal" role="alertdialog" aria-modal="true" aria-labelledby="confirmTitle" aria-describedby="confirmMessage">
+    <div class="confirm-icon" aria-hidden="true">!</div>
+    <h2 id="confirmTitle">Confirm action</h2>
+    <p class="hint" id="confirmMessage"></p>
+    <div class="modal-foot">
+      <button class="btn" id="cancelConfirm" type="button">Cancel</button>
+      <button class="btn settings-danger" id="acceptConfirm" type="button">Continue</button>
+    </div>
+  </section>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+/* ============ CONFIG ============
+   compilerEndpoint: C++ run karne ke liye apna server (browser native C++ compile nahi kar sakta).
+*/
+const CONFIG = {
+  endpoint: '/api/chat',
+  compilerEndpoint: ''
+};
+const SUPABASE_URL = 'https://dlidztiuttjwloyvdyeb.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRsaWR6dGl1dHRqd2xveXZkeWViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI0MjE0MzgsImV4cCI6MjEwNzk5NzQzOH0.Y-SNDQ2qgqCHg9jKXCA5put6kvIbVB4ZAzf5qyppxuI';
+
+const $ = s => document.querySelector(s);
+const thread = $('#thread'), chat = $('#chat'), input = $('#input'), sendBtn = $('#send');
+const sidebar = $('#sidebar'), overlay = $('#overlay'), wand = $('#wand');
+const WAND_SYS = "You are an expert prompt engineer. Rewrite the user's short request into a precise, engineer-level prompt that states the goal, context, constraints, expected output format and edge cases. Return only the rewritten prompt, with no preamble.";
+const RUNNABLE = { python:1, javascript:1, html:1, cpp:1 };
+const F = '```';
+
+let mode = 'instant', busy = false, wandPrev = null;
+let supabaseClient = null, authSession = null, modelOptions = [], selectedModelId = 'auto';
+let conversations = [], currentConversationId = null;
+const selectedFiles = [];
+const convo = [], codeStore = [];
+let confirmationResolver = null, confirmationReturnFocus = null;
+
+function confirmAction(title, message, confirmLabel){
+  if(confirmationResolver) return Promise.resolve(false);
+  const modal = $('#confirmModal');
+  const cancelButton = $('#cancelConfirm');
+  const confirmButton = $('#acceptConfirm');
+  $('#confirmTitle').textContent = title;
+  $('#confirmMessage').textContent = message;
+  confirmButton.textContent = confirmLabel;
+  confirmationReturnFocus = document.activeElement;
+  modal.classList.add('show');
+  cancelButton.focus();
+  return new Promise(resolve => { confirmationResolver = resolve; });
+}
+
+function closeConfirmation(confirmed){
+  const modal = $('#confirmModal');
+  modal.classList.remove('show');
+  const resolve = confirmationResolver;
+  confirmationResolver = null;
+  if(resolve) resolve(confirmed);
+  if(confirmationReturnFocus?.isConnected) confirmationReturnFocus.focus();
+  confirmationReturnFocus = null;
+}
+
+$('#cancelConfirm').addEventListener('click', () => closeConfirmation(false));
+$('#acceptConfirm').addEventListener('click', () => closeConfirmation(true));
+$('#confirmModal').addEventListener('click', event => {
+  if(event.target.id === 'confirmModal') closeConfirmation(false);
+});
+document.addEventListener('keydown', event => {
+  if(event.key === 'Escape' && confirmationResolver) closeConfirmation(false);
+});
+
+/* ============ HERO ============ */
+const heroHTML = `
+<div class="hero" id="hero">
+  <div class="mark-lg">Z</div>
+  <h1 id="welcomeTitle">Welcome to ZetaCore AI</h1>
+  <p class="sub" id="tagline"></p>
+  <div class="cards" id="suggestionCards"></div>
+</div>`;
+const welcomeLines = [
+  'What would you like to create today?',
+  'Your ideas, powered by intelligent models.',
+  'A focused workspace for your next big idea.',
+  'Ask a question, explore an idea, or build something new.'
+];
+const suggestions = [
+  { title: 'Build a feature', description: 'Help me plan and implement a feature for my project.', prompt: 'Help me plan and implement a feature for my project. Ask any essential clarifying questions first.' },
+  { title: 'Debug my code', description: 'Find the root cause and suggest a reliable fix.', prompt: 'Help me debug an issue. I will share the code and error; identify the root cause and suggest a reliable fix.' },
+  { title: 'Design an architecture', description: 'Compare approaches, trade-offs, and edge cases.', prompt: 'Help me design a production-ready software architecture. Cover the main components, trade-offs, and important edge cases.' },
+  { title: 'Explain a concept', description: 'Get a clear explanation with practical examples.', prompt: 'Explain a technical concept clearly, using a practical example and highlighting common misunderstandings.' },
+  { title: 'Review my code', description: 'Check for bugs, maintainability, and improvements.', prompt: 'Review my code for correctness, bugs, security concerns, and maintainability. Prioritize actionable findings.' },
+  { title: 'Write a useful script', description: 'Create a Python or JavaScript script for a task.', prompt: 'Help me write a reliable Python or JavaScript script for a task. Ask me what the script should do.' },
+  { title: 'Improve performance', description: 'Find bottlenecks and practical optimization options.', prompt: 'Help me find performance bottlenecks and recommend practical optimizations for my application.' },
+  { title: 'Plan a project', description: 'Turn an idea into milestones and clear next steps.', prompt: 'Turn my project idea into a practical plan with milestones, risks, and clear next steps.' },
+  { title: 'Learn something new', description: 'Build a structured learning plan for a topic.', prompt: 'Create a structured learning plan for a topic I choose, with practical exercises and progress milestones.' }
+];
+
+function renderHero(user = authSession?.user){
+  thread.innerHTML = heroHTML;
+  const metadata = user?.user_metadata || {};
+  const fullName = metadata.full_name || metadata.name || '';
+  const firstName = fullName.trim().split(/\s+/)[0] || user?.email?.split('@')[0] || '';
+  $('#welcomeTitle').textContent = firstName ? `Welcome back, ${firstName}` : 'Welcome to ZetaCore AI';
+  $('#tagline').textContent = welcomeLines[Math.floor(Math.random() * welcomeLines.length)];
+  const shuffled = [...suggestions];
+  for(let index = shuffled.length - 1; index > 0; index--){
+    const swapIndex = Math.floor(Math.random() * (index + 1));
+    [shuffled[index], shuffled[swapIndex]] = [shuffled[swapIndex], shuffled[index]];
+  }
+  const cards = $('#suggestionCards');
+  shuffled.slice(0, 3).forEach((suggestion, index) => {
+    const card = document.createElement('button');
+    card.className = 'card';
+    card.type = 'button';
+    card.dataset.prompt = suggestion.prompt;
+    card.style.animationDelay = `${0.22 + index * 0.08}s`;
+    const title = document.createElement('b');
+    title.textContent = suggestion.title;
+    const description = document.createElement('span');
+    description.textContent = suggestion.description;
+    card.append(title, description);
+    cards.appendChild(card);
+  });
+}
+renderHero(null);
+
+/* ============ UTIL ============ */
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+function esc(s){ return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function toast(msg){
+  const t = $('#toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('show'), 2200);
+}
+function showServiceNotice(message){
+  const notice = $('#serviceNotice');
+  notice.textContent = message;
+  notice.classList.toggle('show', Boolean(message));
+}
+function isoDate(date){
+  return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+}
+function minimumAllowedDob(){
+  const now = new Date();
+  const year = now.getFullYear() - 13;
+  const day = Math.min(now.getDate(), new Date(year, now.getMonth()+1, 0).getDate());
+  return isoDate(new Date(year, now.getMonth(), day));
+}
+function validDob(value){
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(value || '')) return false;
+  const parsed = new Date(`${value}T12:00:00`);
+  return !Number.isNaN(parsed.getTime()) && isoDate(parsed) === value
+    && value >= '1900-01-01' && value <= minimumAllowedDob();
+}
+function showAccount(user){
+  const name = user.user_metadata?.full_name || user.user_metadata?.name || 'ZetaCore user';
+  $('#accountName').textContent = name;
+  $('#accountEmail').textContent = user.email || '';
+  $('#accountAvatar').textContent = name.trim().split(/\s+/).slice(0,2).map(part => part[0]).join('').toUpperCase() || 'Z';
+  $('#settingsIdentity').textContent = `${user.email || ''} · Free plan`;
+}
+function autosize(){
+  input.style.height = 'auto';
+  input.style.height = Math.min(input.scrollHeight, 200) + 'px';
+  sendBtn.disabled = busy || (!input.value.trim() && !selectedFiles.length);
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('.side-btn, .card, .send, .btn, .icon, .wand, .seg button, .cb-actions button, .model-picker-trigger, .attach-btn');
+  if(!b) return;
+  const r = b.getBoundingClientRect(), s = Math.max(r.width, r.height);
+  const dot = document.createElement('span');
+  dot.className = 'ripple';
+  dot.style.cssText = `width:${s}px;height:${s}px;left:${e.clientX - r.left - s/2}px;top:${e.clientY - r.top - s/2}px`;
+  if(getComputedStyle(b).position === 'static') b.style.position = 'relative';
+  b.style.overflow = 'hidden';
+  b.appendChild(dot);
+  setTimeout(() => dot.remove(), 600);
+});
+
+/* ============ MODE TOGGLE ============ */
+const modelPickerTrigger = $('#modelPickerTrigger');
+const modelMenu = $('#modelMenu');
+function setModelPickerOpen(open, focusSelected = false){
+  modelPickerTrigger.setAttribute('aria-expanded', String(open));
+  modelMenu.hidden = !open;
+  if(open && focusSelected){
+    const selected = modelMenu.querySelector('[aria-selected="true"]');
+    (selected || modelMenu.querySelector('[role="option"]'))?.focus();
+  }
+}
+function selectModel(id, label){
+  selectedModelId = id;
+  $('#modelPickerName').textContent = label;
+  const model = modelOptions.find(option => option.id === id);
+  $('#modelPickerMeta').textContent = id === 'auto'
+    ? 'Gemini first · OpenRouter free fallback'
+    : `${model?.provider === 'gemini' ? 'Gemini' : model?.provider === 'openrouter' ? 'OpenRouter Free' : 'ZetaCore'} · ${mode === 'instant' ? 'Instant' : 'Deep Reason'}`;
+  modelMenu.querySelectorAll('[role="option"]').forEach(option => {
+    const selected = option.dataset.modelId === id;
+    option.setAttribute('aria-selected', String(selected));
+    option.classList.toggle('selected', selected);
+    option.querySelector('.model-option-check').textContent = selected ? '✓' : '';
+  });
+}
+function refreshModels(){
+  const options = $('#modelOptions');
+  const available = modelOptions.filter(model => model.mode === mode);
+  $('#modelModeBadge').textContent = mode === 'instant' ? 'Instant' : 'Deep Reason';
+  $('#modelMenuEmpty').hidden = available.length > 0;
+  options.replaceChildren();
+  const addOption = (id, label, description, icon) => {
+    const option = document.createElement('button');
+    option.type = 'button';
+    option.className = 'model-option';
+    option.setAttribute('role', 'option');
+    option.dataset.modelId = id;
+    option.setAttribute('aria-selected', 'false');
+    const modelIcon = document.createElement('span');
+    modelIcon.className = 'model-option-icon';
+    modelIcon.setAttribute('aria-hidden', 'true');
+    modelIcon.textContent = icon;
+    const copy = document.createElement('span');
+    copy.className = 'model-option-copy';
+    const name = document.createElement('span');
+    name.className = 'model-option-name';
+    name.textContent = label;
+    const providerName = document.createElement('span');
+    providerName.className = 'model-option-provider';
+    providerName.textContent = description;
+    copy.append(name, providerName);
+    const check = document.createElement('span');
+    check.className = 'model-option-check';
+    check.setAttribute('aria-hidden', 'true');
+    option.append(modelIcon, copy, check);
+    option.addEventListener('click', () => {
+      selectModel(id, label);
+      setModelPickerOpen(false);
+      modelPickerTrigger.focus();
+    });
+    option.addEventListener('keydown', event => {
+      const availableOptions = [...modelMenu.querySelectorAll('[role="option"]')];
+      let nextIndex = availableOptions.indexOf(option);
+      if(event.key === 'ArrowDown') nextIndex = (nextIndex + 1) % availableOptions.length;
+      else if(event.key === 'ArrowUp') nextIndex = (nextIndex - 1 + availableOptions.length) % availableOptions.length;
+      else if(event.key === 'Home') nextIndex = 0;
+      else if(event.key === 'End') nextIndex = availableOptions.length - 1;
+      else if(event.key === 'Escape'){ setModelPickerOpen(false); modelPickerTrigger.focus(); return; }
+      else return;
+      event.preventDefault();
+      availableOptions[nextIndex].focus();
+    });
+    options.appendChild(option);
+  };
+  addOption('auto', 'Automatic', 'Gemini primary · OpenRouter free fallback', '✦');
+  available.forEach((model, index) => {
+    const provider = model.provider === 'gemini' ? 'Gemini' : 'OpenRouter Free';
+    addOption(
+      model.id,
+      model.label || `ZetaCore ${mode === 'instant' ? 'Instant' : 'Deep Reason'}${index ? ` ${index + 1}` : ''}`,
+      `${provider} · ${model.model || 'AI model'}`,
+      '◈'
+    );
+  });
+  if(!available.some(model => model.id === selectedModelId)) selectedModelId = 'auto';
+  const selected = available.find(model => model.id === selectedModelId);
+  selectModel(selectedModelId, selected ? selected.label : 'Automatic');
+}
+
+modelPickerTrigger.addEventListener('click', () => {
+  const opening = modelMenu.hidden;
+  setModelPickerOpen(opening, opening);
+});
+document.addEventListener('click', event => {
+  if(!$('#modelPicker').contains(event.target)) setModelPickerOpen(false);
+});
+modelPickerTrigger.addEventListener('keydown', event => {
+  if(event.key === 'ArrowDown' || event.key === 'Enter' || event.key === ' '){
+    event.preventDefault();
+    setModelPickerOpen(true, true);
+  } else if(event.key === 'Escape'){
+    setModelPickerOpen(false);
+  }
+});
+document.addEventListener('keydown', event => {
+  if(event.key !== 'Escape') return;
+  if($('#modelSetupModal').classList.contains('show')){
+    closeModelSetup();
+  } else if(!modelMenu.hidden){
+    setModelPickerOpen(false);
+    modelPickerTrigger.focus();
+  }
+});
+function closeModelSetup(){
+  $('#modelSetupModal').classList.remove('show');
+  modelPickerTrigger.focus();
+}
+$('#openModelSetup').addEventListener('click', () => {
+  setModelPickerOpen(false);
+  $('#modelSetupModal').classList.add('show');
+  $('#closeModelSetup').focus();
+});
+$('#closeModelSetup').addEventListener('click', closeModelSetup);
+$('#doneModelSetup').addEventListener('click', closeModelSetup);
+$('#modelSetupModal').addEventListener('click', event => {
+  if(event.target.id === 'modelSetupModal') closeModelSetup();
+});
+
+document.querySelectorAll('.seg button').forEach(b => b.addEventListener('click', () => {
+  if(b.classList.contains('active')) return;
+  document.querySelectorAll('.seg button').forEach(x => { x.classList.remove('active'); x.setAttribute('aria-selected','false'); });
+  b.classList.add('active'); b.setAttribute('aria-selected','true');
+  mode = b.dataset.mode;
+  refreshModels();
+  toast(mode === 'instant' ? '⚡ Instant mode on' : '◈ Deep Reason mode on');
+}));
+
+/* ============ MEMORY VAULT ============ */
+const MEM_KEY = 'zc_memory';
+const loadMem = () => { try { return JSON.parse(localStorage.getItem(MEM_KEY) || '[]'); } catch { return []; } };
+const saveMem = m => localStorage.setItem(MEM_KEY, JSON.stringify(m));
+function renderMem(){
+  const list = $('#memList'), m = loadMem();
+  list.innerHTML = '';
+  if(!m.length){ list.innerHTML = '<div class="note">Abhi koi memory nahi hai.</div>'; return; }
+  m.forEach((x, i) => {
+    const d = document.createElement('div');
+    d.className = 'mem';
+    d.innerHTML = `<div><b></b><div class="c"></div></div><button class="icon" data-del="${i}" title="Delete" aria-label="Delete">✕</button>`;
+    d.querySelector('b').textContent = x.title;
+    d.querySelector('.c').textContent = x.content;
+    list.appendChild(d);
+  });
+}
+$('#memList').addEventListener('click', e => {
+  const b = e.target.closest('[data-del]');
+  if(!b) return;
+  const m = loadMem(); m.splice(+b.dataset.del, 1); saveMem(m); renderMem(); toast('Memory delete ho gayi');
+});
+$('#memSave').addEventListener('click', () => {
+  const title = $('#memTitle').value.trim(), content = $('#memContent').value.trim();
+  if(!title || !content){ toast('Title aur details dono likhein'); return; }
+  const m = loadMem(); m.push({ title, content, at: Date.now() }); saveMem(m);
+  $('#memTitle').value = ''; $('#memContent').value = '';
+  renderMem(); toast('Vault mein save ho gaya');
+});
+$('#memClear').addEventListener('click', () => { $('#memTitle').value = ''; $('#memContent').value = ''; });
+const openVault = () => { renderMem(); $('#vaultModal').classList.add('show'); closeSidebar(); };
+const closeVault = () => $('#vaultModal').classList.remove('show');
+$('#openVault').addEventListener('click', openVault);
+$('#vaultBtn').addEventListener('click', openVault);
+$('#closeVault').addEventListener('click', closeVault);
+$('#vaultModal').addEventListener('click', e => { if(e.target.id === 'vaultModal') closeVault(); });
+
+function systemPrompt(hasAttachments = false){
+  const identity = 'You are ZetaCore AI, a professional AI assistant. If greeted or asked who you are, say: "I am ZetaCore AI. How can I help you?" If asked who created or developed you, say: "I was created by a professional developer known as Honey, who prefers to keep their identity private." Do not guess or reveal Honey’s private identity or personal details. Do not claim that ZetaCore independently trained the underlying model. If directly asked which model or provider powers a response, answer honestly that ZetaCore may use a configured third-party AI provider.';
+  const base = mode === 'deep'
+    ? `${identity} You are an expert software architect. Analyse requirements, consider architecture, edge cases, complexity and trade-offs, then give production-quality code in fenced blocks with the language tag.`
+    : `${identity} You are a fast and precise assistant. Answer concisely and directly. Put any code in fenced blocks with the language tag.`;
+  const mem = loadMem();
+  const ctx = mem.length ? '\n\nUser memory (always apply these project settings and preferences):\n' + mem.map(m => `- ${m.title}: ${m.content}`).join('\n') : '';
+  const attachmentGuidance = hasAttachments
+    ? '\n\nThe latest user message includes uploaded attachments. Inspect their actual contents before answering. Do not ask the user to send files that are already attached. If a particular file cannot be read, clearly say which one and why; never pretend to have analyzed it.'
+    : '';
+  return base + ctx + attachmentGuidance;
+}
+
+async function callAI(messages, system = systemPrompt(), attachments = []){
+  if(!supabaseClient) throw new Error('Supabase login configuration is missing');
+  const { data, error } = await supabaseClient.auth.getSession();
+  if(error) throw new Error(error.message);
+  authSession = data.session;
+  if(!authSession) throw new Error('Please sign in to continue');
+  let response;
+  try{
+    response = await fetch(CONFIG.endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer ' + authSession.access_token
+      },
+      body: JSON.stringify({ mode, modelId: selectedModelId, system, messages, attachments })
+    });
+  } catch {
+    throw new Error('ZetaCore is temporarily unavailable. Please try again later.');
+  }
+  const result = await response.json().catch(() => ({}));
+  if(!response.ok){
+    if(response.status === 401) throw new Error('Your session has expired. Please sign in again.');
+    if(response.status === 403) throw new Error('This account is temporarily deactivated. Sign in again to reactivate it.');
+    if(response.status === 429) throw new Error('We have reached a temporary usage limit. Please try again later.');
+    if(result.code === 'UNSUPPORTED_ATTACHMENTS') throw new Error('The selected model cannot read images. Choose another model and try again.');
+    if(result.code === 'INVALID_ATTACHMENTS') throw new Error('One or more attachments could not be processed. Check the file type and size, then try again.');
+    if(result.code === 'ATTACHMENTS_TOO_LARGE') throw new Error('The combined attachment size is too large. Please reduce the files and try again.');
+    if(result.code === 'REQUEST_TOO_LARGE') throw new Error('These attachments are too large to send. Please reduce their size and try again.');
+    if(response.status === 503) throw new Error('AI services are temporarily unavailable. Please try again later.');
+    throw new Error('ZetaCore is temporarily unavailable. Please try again later.');
+  }
+  if(typeof result.content !== 'string') throw new Error('ZetaCore returned an invalid response. Please try again later.');
+  return result.content;
+}
+
+function demoReply(messages, system){
+  const q = messages[messages.length - 1].content;
+  let out;
+  if(system === WAND_SYS){
+    out = 'Act as a senior software engineer. ' + q + ' Explain the approach briefly, provide production-ready code with comments, handle edge cases, and state the time and space complexity.';
+  } else {
+    out = `Demo mode (keys abhi set nahi hain). Aapka sawaal: "${q}"\n\nPython sample:\n${F}python\nprint("Hello from ZetaCore")\nfor i in range(3):\n    print("step", i)\n${F}\n\nJavaScript sample:\n${F}javascript\nconsole.log("JS run ho gaya:", 2 + 2);\n${F}\n\nKisi bhi code block par ▶ Run dabayein.`;
+  }
+  return new Promise(r => setTimeout(() => r(out), 650));
+}
+
+/* ============ MAGIC WAND ============ */
+async function magic(){
+  if(wandPrev !== null){
+    input.value = wandPrev; wandPrev = null; wand.classList.remove('on'); autosize();
+    toast('Original prompt wapas aa gaya'); return;
+  }
+  const raw = input.value.trim();
+  if(!raw){ toast('Pehle kuch likhein, phir Optimize dabayein'); return; }
+  wand.classList.add('busy');
+  try{
+    const out = await callAI([{ role: 'user', content: raw }], WAND_SYS);
+    wandPrev = raw; input.value = out.trim(); autosize(); wand.classList.add('on');
+    toast('Prompt optimize ho gaya. Undo ke liye dobara dabayein');
+  } catch(e){ toast('Optimizer fail: ' + e.message); }
+  finally { wand.classList.remove('busy'); }
+}
+wand.addEventListener('click', magic);
+
+/* ============ CODE RENDER + RUNNER ============ */
+function norm(l){
+  l = (l || '').toLowerCase();
+  return { py:'python', python:'python', js:'javascript', javascript:'javascript', html:'html', htm:'html', 'c++':'cpp', cpp:'cpp', cc:'cpp' }[l] || l;
+}
+function textBlock(t){ return t.trim() ? `<div class="prose">${esc(t.trim()).replace(/\n/g, '<br>')}</div>` : ''; }
+function renderMD(md){
+  let html = '', last = 0, m;
+  const re = /```([\w+#-]*)\n([\s\S]*?)```/g;
+  while((m = re.exec(md))){
+    html += textBlock(md.slice(last, m.index));
+    const code = m[2].replace(/\n$/, '');
+    codeStore.push({ lang: m[1] || 'text', code });
+    const i = codeStore.length - 1, L = norm(m[1]);
+    html += `<div class="cb"><div class="cb-head"><span>${esc(m[1] || 'text')}</span><span class="cb-actions"><button data-act="copy" data-i="${i}">Copy</button>${RUNNABLE[L] ? `<button data-act="run" data-i="${i}">▶ Run</button>` : ''}</span></div><pre>${esc(code)}</pre></div>`;
+    last = re.lastIndex;
+  }
+  return html + textBlock(md.slice(last));
+}
+
+function jsDoc(code){
+  return '<!doctype html><body style="margin:0;background:#070707;color:#ddd;font:13px ui-monospace,monospace">' +
+    '<pre id="o" style="margin:0;padding:12px;white-space:pre-wrap"></pre>' +
+    '<script>const o=document.getElementById("o");const w=(...a)=>{o.textContent+=a.map(x=>typeof x==="object"?JSON.stringify(x):String(x)).join(" ")+"\\n"};console.log=w;console.error=(...a)=>w("ERR:",...a);window.onerror=(m)=>w("Error: "+m);<\/script>' +
+    '<script>' + code + '\n<\/script></body>';
+}
+
+let pyPromise = null;
+function loadPy(){
+  if(!pyPromise){
+    pyPromise = new Promise((res, rej) => {
+      const s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/pyodide/v0.26.2/full/pyodide.js';
+      s.onload = async () => { try { res(await loadPyodide()); } catch(e){ rej(e); } };
+      s.onerror = () => rej(new Error('Python runtime load nahi hua (internet check karein)'));
+      document.head.appendChild(s);
+    });
+  }
+  return pyPromise;
+}
+async function runPy(code, pre){
+  pre.textContent = '';
+  const py = await loadPy();
+  py.setStdout({ batched: s => pre.textContent += s + '\n' });
+  py.setStderr({ batched: s => pre.textContent += 'ERR: ' + s + '\n' });
+  try { await py.runPythonAsync(code); if(!pre.textContent) pre.textContent = '(no output)'; }
+  catch(e){ pre.textContent += e.message; }
+}
+async function runCpp(code, pre){
+  if(!CONFIG.compilerEndpoint){
+    pre.textContent = 'C++ ke liye CONFIG.compilerEndpoint set karein. Browser C++ native compile nahi kar sakta, isliye server-side compiler chahiye.';
+    return;
+  }
+  const r = await fetch(CONFIG.compilerEndpoint, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ language:'cpp', code }) });
+  const j = await r.json();
+  pre.textContent = ((j.stdout || '') + (j.stderr ? '\nERR: ' + j.stderr : '')) || '(no output)';
+}
+
+async function runBlock(i, btn){
+  const { lang, code } = codeStore[i], L = norm(lang);
+  const card = btn.closest('.cb');
+  let out = card.nextElementSibling;
+  if(!out || !out.classList.contains('out')){ out = document.createElement('div'); out.className = 'out'; card.after(out); }
+  out.innerHTML = `<div class="out-head">Output · ${esc(L)}</div>`;
+
+  if(L === 'html' || L === 'javascript'){
+    const f = document.createElement('iframe');
+    f.className = 'frame';
+    f.setAttribute('sandbox', 'allow-scripts');
+    if(L === 'javascript') f.style.height = '160px';
+    f.srcdoc = L === 'html' ? code : jsDoc(code);
+    out.appendChild(f);
+    return;
+  }
+  const pre = document.createElement('pre');
+  pre.textContent = 'Running…';
+  out.appendChild(pre);
+  try{
+    if(L === 'python') await runPy(code, pre);
+    else await runCpp(code, pre);
+  } catch(e){ pre.textContent = 'Error: ' + e.message; }
+}
+
+thread.addEventListener('click', e => {
+  const act = e.target.closest('[data-act]');
+  if(act){
+    const i = +act.dataset.i;
+    if(act.dataset.act === 'copy'){ navigator.clipboard?.writeText(codeStore[i].code); toast('Code copy ho gaya'); }
+    else runBlock(i, act);
+    return;
+  }
+  const card = e.target.closest('.card');
+  if(card){ input.value = card.dataset.prompt; autosize(); input.focus(); }
+});
+
+/* ============ CHAT ============ */
+function currentUserDisplayName(){
+  const user = authSession?.user;
+  const metadata = user?.user_metadata || {};
+  return metadata.full_name || metadata.name || user?.email?.split('@')[0] || 'You';
+}
+function addMsg(role, text){
+  const wrap = document.createElement('div');
+  wrap.className = 'msg ' + role;
+  if(role === 'ai'){
+    const avatar = document.createElement('div');
+    avatar.className = 'avatar';
+    avatar.textContent = 'Z';
+    wrap.appendChild(avatar);
+  }
+  const main = document.createElement('div');
+  main.className = 'msg-main';
+  const label = document.createElement('div');
+  label.className = 'msg-label';
+  label.textContent = role === 'ai' ? 'ZetaCore AI' : currentUserDisplayName();
+  const b = document.createElement('div');
+  b.className = 'bubble';
+  main.append(label, b);
+  wrap.appendChild(main);
+  b.textContent = text;
+  thread.appendChild(wrap);
+  chat.scrollTop = chat.scrollHeight;
+  return b;
+}
+function addAttachmentLabels(bubble, attachments = []){
+  if(!attachments.length) return;
+  const list = document.createElement('div');
+  list.className = 'message-attachments';
+  attachments.forEach(attachment => {
+    const label = document.createElement('span');
+    label.className = 'message-attachment';
+    label.textContent = attachment.name;
+    list.appendChild(label);
+  });
+  bubble.appendChild(list);
+}
+let typingTimer = null;
+function showTyping(hasAttachments = false){
+  const wrap = document.createElement('div');
+  wrap.className = 'msg ai'; wrap.id = 'typing';
+  const avatar = document.createElement('div');
+  avatar.className = 'avatar';
+  avatar.textContent = 'Z';
+  const main = document.createElement('div');
+  main.className = 'msg-main';
+  const label = document.createElement('div');
+  label.className = 'msg-label';
+  label.textContent = 'ZetaCore AI';
+  const status = document.createElement('div');
+  status.className = 'analysis-status';
+  const dots = document.createElement('span');
+  dots.className = 'analysis-dots';
+  dots.innerHTML = '<span></span><span></span><span></span>';
+  const copy = document.createElement('span');
+  const stages = hasAttachments
+    ? ['Reviewing your message', 'Analyzing your attachments', 'Preparing a clear response']
+    : ['Reading your message', 'Analyzing the details', 'Preparing a clear response'];
+  let stage = 0;
+  copy.textContent = stages[stage];
+  status.append(dots, copy);
+  main.append(label, status);
+  wrap.append(avatar, main);
+  thread.appendChild(wrap);
+  chat.scrollTop = chat.scrollHeight;
+  clearInterval(typingTimer);
+  typingTimer = setInterval(() => {
+    stage = (stage + 1) % stages.length;
+    copy.textContent = stages[stage];
+  }, 1600);
+}
+function removeTyping(){
+  clearInterval(typingTimer);
+  typingTimer = null;
+  $('#typing')?.remove();
+}
+async function typeOut(text){
+  const b = addMsg('ai', '');
+  b.classList.add('caret');
+  for(let i = 0; i < text.length; i += 4){
+    b.textContent = text.slice(0, i + 4);
+    chat.scrollTop = chat.scrollHeight;
+    await sleep(8);
+  }
+  b.classList.remove('caret');
+  b.classList.add('ai-rich');
+  b.innerHTML = renderMD(text);
+  chat.scrollTop = chat.scrollHeight;
+}
+function renderConversationList(){
+  const pinned = $('#pinnedChats'), recent = $('#recentChats'), archived = $('#archivedChats');
+  pinned.replaceChildren(); recent.replaceChildren(); archived.replaceChildren();
+  const active = conversations.filter(item => !item.archived);
+  const pinnedItems = active.filter(item => item.pinned);
+  const recentItems = active.filter(item => !item.pinned);
+  $('#pinnedGroup').hidden = !pinnedItems.length;
+  $('#archivedGroup').hidden = !conversations.some(item => item.archived);
+  $('#recentGroup').hidden = !recentItems.length && active.length > 0;
+  const addEmpty = (target, text) => {
+    const empty = document.createElement('div');
+    empty.className = 'empty-hist';
+    empty.textContent = text;
+    target.appendChild(empty);
+  };
+  if(!active.length) addEmpty(recent, 'No chats yet');
+  const makeRow = (item, target) => {
+    const row = document.createElement('div');
+    row.className = 'hist-row' + (item.id === currentConversationId ? ' active' : '');
+    row.dataset.conversationId = item.id;
+    const title = document.createElement('button');
+    title.type = 'button';
+    title.className = 'hist';
+    title.textContent = item.title || 'New chat';
+    title.title = item.title || 'New chat';
+    title.setAttribute('aria-label', `Open chat: ${item.title || 'New chat'}`);
+    row.appendChild(title);
+    if(item.pinned && !item.archived){
+      const pin = document.createElement('span');
+      pin.className = 'hist-pin';
+      pin.textContent = '◆';
+      pin.title = 'Pinned';
+      row.appendChild(pin);
+    }
+    const actions = document.createElement('div');
+    actions.className = 'hist-actions';
+    const addAction = (action, glyph, label, danger = false) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'hist-action' + (danger ? ' danger' : '');
+      button.dataset.conversationAction = action;
+      button.setAttribute('aria-label', `${label}: ${item.title || 'New chat'}`);
+      button.title = label;
+      button.textContent = glyph;
+      actions.appendChild(button);
+    };
+    if(item.archived){
+      addAction('restore', '↩', 'Restore chat');
+      addAction('delete', '×', 'Delete chat', true);
+    } else {
+      addAction('pin', item.pinned ? '◆' : '◇', item.pinned ? 'Unpin chat' : 'Pin chat');
+      addAction('rename', '✎', 'Rename chat');
+      addAction('archive', '▣', 'Archive chat');
+      addAction('delete', '×', 'Delete chat', true);
+    }
+    row.appendChild(actions);
+    target.appendChild(row);
+  };
+  pinnedItems.forEach(item => makeRow(item, pinned));
+  recentItems.forEach(item => makeRow(item, recent));
+  conversations.filter(item => item.archived).forEach(item => makeRow(item, archived));
+}
+
+async function loadConversations(){
+  const { data, error } = await supabaseClient.from('zetacore_conversations')
+    .select('id,title,messages,pinned,archived,created_at,updated_at')
+    .order('pinned', { ascending: false })
+    .order('updated_at', { ascending: false });
+  if(error) throw new Error(`Could not load chats from Supabase. Confirm the chat-history SQL setup has been run: ${error.message}`);
+  conversations = data || [];
+  renderConversationList();
+}
+
+async function persistConversation(){
+  if(!authSession?.user) throw new Error('Sign in to save this chat.');
+  const existing = conversations.find(item => item.id === currentConversationId);
+  const payload = {
+    user_id: authSession.user.id,
+    title: existing?.title || convo.find(message => message.role === 'user')?.content.slice(0, 60) || 'New chat',
+    messages: convo,
+    pinned: existing?.pinned || false,
+    archived: existing?.archived || false,
+    updated_at: new Date().toISOString(),
+  };
+  const result = existing
+    ? await supabaseClient.from('zetacore_conversations').update(payload).eq('id', existing.id).select('id,title,messages,pinned,archived,created_at,updated_at').single()
+    : await supabaseClient.from('zetacore_conversations').insert(payload).select('id,title,messages,pinned,archived,created_at,updated_at').single();
+  if(result.error) throw new Error(`Could not save chat to Supabase. Confirm the chat-history SQL setup has been run: ${result.error.message}`);
+  const saved = result.data;
+  currentConversationId = saved.id;
+  const index = conversations.findIndex(item => item.id === saved.id);
+  if(index < 0) conversations.unshift(saved);
+  else conversations[index] = saved;
+  renderConversationList();
+}
+
+function renderSavedConversation(item){
+  currentConversationId = item.id;
+  convo.splice(0, convo.length, ...(Array.isArray(item.messages) ? item.messages : []));
+  thread.replaceChildren();
+  codeStore.length = 0;
+  convo.forEach(message => {
+    const bubble = addMsg(message.role === 'assistant' ? 'ai' : 'user', message.content);
+    if(message.role === 'assistant'){
+      bubble.classList.add('ai-rich');
+      bubble.innerHTML = renderMD(message.content);
+    } else addAttachmentLabels(bubble, message.attachments);
+  });
+  renderConversationList();
+  closeSidebar();
+}
+
+async function updateConversation(id, values){
+  const { error } = await supabaseClient.from('zetacore_conversations')
+    .update({ ...values, updated_at: new Date().toISOString() }).eq('id', id);
+  if(error) throw new Error(`Could not update chat: ${error.message}`);
+  await loadConversations();
+}
+
+async function deleteConversation(id){
+  const { error } = await supabaseClient.from('zetacore_conversations')
+    .delete().eq('id', id);
+  if(error) throw new Error(`Could not delete chat: ${error.message}`);
+  conversations = conversations.filter(item => item.id !== id);
+  if(currentConversationId === id){
+    currentConversationId = null;
+    convo.length = 0;
+    renderHero();
+  }
+  renderConversationList();
+}
+
+async function send(){
+  const text = input.value.trim() || (selectedFiles.length ? 'Please review the attached file(s).' : '');
+  if(!text || busy) return;
+  busy = true; sendBtn.disabled = true;
+  showServiceNotice('');
+  const conversationIdBeforeSend = currentConversationId;
+  let userMessage = null, userMessageElement = null, persisted = false;
+  try{
+    if(supabaseClient && !authSession?.user){
+      const { data, error } = await supabaseClient.auth.getSession();
+      if(error) throw error;
+      authSession = data.session;
+    }
+    if(!authSession?.user) throw new Error('Your session has expired. Please sign in again.');
+    const filePayloads = await Promise.all(selectedFiles.map(readAttachment));
+    const attachmentMetadata = filePayloads.map(({ name, type, size }) => ({ name, type, size }));
+    $('#hero')?.remove();
+    const userBubble = addMsg('user', text);
+    userMessageElement = userBubble.closest('.msg');
+    addAttachmentLabels(userBubble, attachmentMetadata);
+    userMessage = { role: 'user', content: text, attachments: attachmentMetadata };
+    convo.push(userMessage);
+    showTyping(filePayloads.length > 0);
+    await persistConversation();
+    persisted = true;
+    const reply = await callAI(convo.slice(-12), systemPrompt(filePayloads.length > 0), filePayloads);
+    removeTyping();
+    convo.push({ role: 'assistant', content: reply });
+    await persistConversation();
+    input.value = '';
+    selectedFiles.splice(0);
+    renderAttachmentList();
+    wandPrev = null; wand.classList.remove('on'); autosize();
+    await typeOut(reply);
+  } catch(e){
+    removeTyping();
+    if(userMessage){
+      if(convo[convo.length - 1]?.role === 'assistant') convo.pop();
+      if(convo[convo.length - 1] === userMessage) convo.pop();
+      userMessageElement?.remove();
+      if(persisted){
+        try{
+          if(conversationIdBeforeSend && currentConversationId) await persistConversation();
+          else if(currentConversationId) await deleteConversation(currentConversationId);
+        } catch(rollbackError){
+          console.error('[chat rollback]', rollbackError);
+        }
+      }
+      if(text !== 'Please review the attached file(s).') input.value = text;
+    }
+    showServiceNotice(e.message || 'ZetaCore is temporarily unavailable. Please try again later.');
+  } finally {
+    busy = false;
+    autosize();
+  }
+}
+
+input.addEventListener('input', () => { wandPrev = null; wand.classList.remove('on'); autosize(); });
+input.addEventListener('keydown', e => { if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); send(); } });
+sendBtn.addEventListener('click', send);
+
+function attachmentMime(file){
+  const extension = file.name.split('.').pop().toLowerCase();
+  const knownTypes = {
+    txt: 'text/plain', md: 'text/markdown', csv: 'text/csv', json: 'application/json',
+    png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', webp: 'image/webp', gif: 'image/gif'
+  };
+  const accepted = ['image/png', 'image/jpeg', 'image/webp', 'image/gif', 'text/plain', 'text/markdown', 'text/csv', 'application/json'];
+  return accepted.includes(file.type) ? file.type : knownTypes[extension] || '';
+}
+function renderAttachmentList(){
+  const list = $('#attachmentList');
+  list.replaceChildren();
+  list.hidden = selectedFiles.length === 0;
+  selectedFiles.forEach((file, index) => {
+    const chip = document.createElement('div');
+    chip.className = 'attachment-chip';
+    const name = document.createElement('span');
+    name.textContent = file.name;
+    const remove = document.createElement('button');
+    remove.type = 'button';
+    remove.dataset.removeAttachment = String(index);
+    remove.setAttribute('aria-label', `Remove ${file.name}`);
+    remove.textContent = '×';
+    chip.append(name, remove);
+    list.appendChild(chip);
+  });
+  autosize();
+}
+function addFiles(files){
+  let rejected = '';
+  for(const file of files){
+    if(selectedFiles.length >= 4){ rejected = 'You can attach up to 4 files per message.'; break; }
+    const type = attachmentMime(file);
+    if(!type){ rejected = 'Attach PNG, JPG, WEBP, GIF, TXT, MD, CSV, or JSON files only.'; continue; }
+    if(type.startsWith('image/') && file.size > 5 * 1024 * 1024){ rejected = 'Each image must be 5 MB or smaller.'; continue; }
+    if(!type.startsWith('image/') && file.size > 200 * 1024){ rejected = 'Each text document must be 200 KB or smaller.'; continue; }
+    const totalSize = [...selectedFiles, file].reduce((total, item) => total + item.size, 0);
+    if(totalSize > 8 * 1024 * 1024){ rejected = 'The combined attachment size must be 8 MB or smaller.'; continue; }
+    if(selectedFiles.some(item => item.name === file.name && item.size === file.size)){ continue; }
+    selectedFiles.push(file);
+  }
+  renderAttachmentList();
+  if(rejected) showServiceNotice(rejected);
+  else showServiceNotice('');
+}
+function readAttachment(file){
+  const type = attachmentMime(file);
+  if(type.startsWith('image/')){
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve({ name: file.name, type, size: file.size, dataUrl: reader.result });
+      reader.onerror = () => reject(new Error(`Could not read ${file.name}. Please try again.`));
+      reader.readAsDataURL(file);
+    });
+  }
+  return file.text().then(content => ({ name: file.name, type, size: file.size, content }));
+}
+$('#attachBtn').addEventListener('click', () => $('#fileInput').click());
+$('#fileInput').addEventListener('change', event => {
+  addFiles(Array.from(event.target.files));
+  event.target.value = '';
+});
+$('#attachmentList').addEventListener('click', event => {
+  const button = event.target.closest('[data-remove-attachment]');
+  if(!button) return;
+  selectedFiles.splice(Number(button.dataset.removeAttachment), 1);
+  renderAttachmentList();
+});
+const composerWrap = document.querySelector('.composer-wrap');
+composerWrap.addEventListener('dragover', event => {
+  if(!Array.from(event.dataTransfer.types).includes('Files')) return;
+  event.preventDefault();
+  composerWrap.classList.add('dragging');
+});
+composerWrap.addEventListener('dragleave', event => {
+  if(!composerWrap.contains(event.relatedTarget)) composerWrap.classList.remove('dragging');
+});
+composerWrap.addEventListener('drop', event => {
+  if(!event.dataTransfer.files.length) return;
+  event.preventDefault();
+  composerWrap.classList.remove('dragging');
+  addFiles(Array.from(event.dataTransfer.files));
+});
+
+/* ============ SIDEBAR ============ */
+function closeSidebar(){ sidebar.classList.remove('open'); overlay.classList.remove('show'); }
+$('#newChat').addEventListener('click', () => {
+  if(busy) return;
+  selectedFiles.splice(0);
+  renderAttachmentList();
+  convo.length = 0;
+  currentConversationId = null;
+  renderConversationList();
+  renderHero();
+  closeSidebar();
+});
+$('#history').addEventListener('click', async event => {
+  const row = event.target.closest('.hist-row');
+  if(!row) return;
+  const item = conversations.find(conversation => conversation.id === row.dataset.conversationId);
+  if(!item) return;
+  const action = event.target.closest('[data-conversation-action]')?.dataset.conversationAction;
+  if(!action){
+    if(busy){ toast('Wait for the current response to finish before switching chats.'); return; }
+    if(selectedFiles.length){ toast('Send or remove pending attachments before switching chats.'); return; }
+    renderSavedConversation(item);
+    return;
+  }
+  try{
+    if(action === 'pin') await updateConversation(item.id, { pinned: !item.pinned });
+    else if(action === 'archive'){
+      await updateConversation(item.id, { archived: true, pinned: false });
+      if(currentConversationId === item.id){
+        currentConversationId = null;
+        convo.length = 0;
+        renderHero();
+      }
+    }
+    else if(action === 'restore') await updateConversation(item.id, { archived: false });
+    else if(action === 'rename'){
+      const title = prompt('Rename chat', item.title);
+      if(title === null) return;
+      const trimmed = title.trim();
+      if(!trimmed){ toast('Chat name cannot be empty.'); return; }
+      await updateConversation(item.id, { title: trimmed.slice(0, 120) });
+    } else if(action === 'delete'){
+      if(!await confirmAction('Delete chat?', `Permanently delete "${item.title}"? This cannot be undone.`, 'Delete chat')) return;
+      await deleteConversation(item.id);
+    }
+  } catch(error){ toast(error.message || 'Chat action failed.'); }
+});
+$('#menuBtn').addEventListener('click', () => { sidebar.classList.add('open'); overlay.classList.add('show'); });
+overlay.addEventListener('click', closeSidebar);
+
+$('#accountSignOut').addEventListener('click', async () => {
+  if(!supabaseClient || !authSession){ location.href = '/index.html'; return; }
+  const { error } = await supabaseClient.auth.signOut();
+  if(error) toast('Sign out nahi ho saka: ' + error.message);
+  else location.replace('/index.html');
+});
+
+function openSettings(){
+  if(!authSession?.user){ toast('Your account session is not available. Please sign in again.'); return; }
+  const user = authSession.user;
+  const metadata = user.user_metadata || {};
+  $('#settingsName').value = metadata.full_name || metadata.name || '';
+  $('#settingsDob').value = validDob(metadata.date_of_birth) ? metadata.date_of_birth : '';
+  $('#settingsDob').max = minimumAllowedDob();
+  $('#settingsGender').value = metadata.gender || '';
+  $('#settingsEmail').value = '';
+  $('#settingsPhone').value = user.phone || '';
+  $('#phoneCode').value = '';
+  $('#phoneVerifyFields').classList.add('hidden');
+  $('#settingsModal').classList.add('show');
+  closeSidebar();
+}
+function closeSettings(){ $('#settingsModal').classList.remove('show'); }
+$('#openSettings').addEventListener('click', openSettings);
+$('#closeSettings').addEventListener('click', closeSettings);
+$('#settingsModal').addEventListener('click', event => {
+  if(event.target.id === 'settingsModal') closeSettings();
+});
+
+$('#saveProfile').addEventListener('click', async () => {
+  const name = $('#settingsName').value.trim();
+  const dateOfBirth = $('#settingsDob').value;
+  const gender = $('#settingsGender').value;
+  const status = $('#profileStatus');
+  status.textContent = '';
+  if(!name || !validDob(dateOfBirth) || !gender){
+    status.textContent = 'Enter your name, a valid date of birth (age 13 or older), and gender.';
+    return;
+  }
+  try{
+    const { data, error } = await supabaseClient.auth.updateUser({
+      data: { ...authSession.user.user_metadata, full_name: name, date_of_birth: dateOfBirth, gender }
+    });
+    if(error) throw error;
+    authSession = { ...authSession, user: data.user };
+    showAccount(data.user);
+    status.textContent = 'Profile updated.';
+  } catch(error){ status.textContent = error.message || 'Profile could not be updated.'; }
+});
+
+$('#changeEmail').addEventListener('click', async () => {
+  const email = $('#settingsEmail').value.trim();
+  const status = $('#emailStatus');
+  status.textContent = '';
+  if(!email){ status.textContent = 'Enter the new email address.'; return; }
+  try{
+    const { error } = await supabaseClient.auth.updateUser({ email });
+    if(error) throw error;
+    status.textContent = 'Verification email sent. Confirm the address to complete the change.';
+  } catch(error){ status.textContent = error.message || 'Email address could not be changed.'; }
+});
+
+$('#sendPhoneCode').addEventListener('click', async () => {
+  const phone = $('#settingsPhone').value.trim();
+  const status = $('#phoneStatus');
+  status.textContent = '';
+  if(!/^\+[1-9]\d{7,14}$/.test(phone)){
+    status.textContent = 'Enter a valid phone number in international format, for example +15551234567.';
+    return;
+  }
+  try{
+    const { error } = await supabaseClient.auth.updateUser({ phone });
+    if(error) throw error;
+    $('#phoneVerifyFields').classList.remove('hidden');
+    status.textContent = 'Verification code sent. Enter it below to confirm your number.';
+  } catch(error){ status.textContent = error.message || 'Verification code could not be sent.'; }
+});
+
+$('#verifyPhone').addEventListener('click', async () => {
+  const phone = $('#settingsPhone').value.trim();
+  const token = $('#phoneCode').value.trim();
+  const status = $('#phoneStatus');
+  status.textContent = '';
+  if(!token){ status.textContent = 'Enter the verification code.'; return; }
+  try{
+    const { data, error } = await supabaseClient.auth.verifyOtp({ phone, token, type: 'phone_change' });
+    if(error) throw error;
+    authSession = { ...authSession, user: data.user };
+    status.textContent = 'Phone number verified and saved.';
+  } catch(error){ status.textContent = error.message || 'Phone number could not be verified.'; }
+});
+
+$('#changePassword').addEventListener('click', async () => {
+  const currentPassword = $('#currentPassword').value;
+  const password = $('#newPassword').value;
+  const confirmation = $('#confirmNewPassword').value;
+  const status = $('#passwordStatus');
+  status.textContent = '';
+  if(password.length < 8){ status.textContent = 'The new password must be at least 8 characters long.'; return; }
+  if(password !== confirmation){ status.textContent = 'The new passwords do not match.'; return; }
+  try{
+    if(currentPassword){
+      const { error: reauthError } = await supabaseClient.auth.signInWithPassword({
+        email: authSession.user.email, password: currentPassword
+      });
+      if(reauthError) throw new Error('Current password could not be verified.');
+    }
+    const { error } = await supabaseClient.auth.updateUser({ password });
+    if(error) throw error;
+    $('#currentPassword').value = '';
+    $('#newPassword').value = '';
+    $('#confirmNewPassword').value = '';
+    status.textContent = 'Password updated.';
+  } catch(error){ status.textContent = error.message || 'Password could not be changed.'; }
+});
+
+$('#deactivateAccount').addEventListener('click', async () => {
+  if(!await confirmAction('Deactivate account?', 'You will be signed out. Sign in again whenever you want to reactivate your account.', 'Deactivate')) return;
+  const status = $('#deactivateStatus');
+  status.textContent = '';
+  try{
+    const { data, error } = await supabaseClient.auth.updateUser({
+      data: { ...authSession.user.user_metadata, zetacore_deactivated_at: new Date().toISOString() }
+    });
+    if(error) throw error;
+    authSession = { ...authSession, user: data.user };
+    const { error: signOutError } = await supabaseClient.auth.signOut();
+    if(signOutError) throw signOutError;
+    location.replace('/index.html?deactivated=1');
+  } catch(error){ status.textContent = error.message || 'Account could not be deactivated.'; }
+});
+
+$('#deleteAccount').addEventListener('click', async () => {
+  const typedEmail = $('#deleteConfirmEmail').value.trim();
+  const status = $('#deleteStatus');
+  status.textContent = '';
+  if(typedEmail.toLowerCase() !== (authSession.user.email || '').toLowerCase()){
+    status.textContent = 'Enter the exact email address on this account to confirm deletion.';
+    return;
+  }
+  if(!await confirmAction('Permanently delete account?', 'This permanently deletes your account and cannot be undone.', 'Delete permanently')) return;
+  try{
+    const { data, error } = await supabaseClient.auth.getSession();
+    if(error) throw error;
+    if(!data.session) throw new Error('Your session expired. Please sign in again.');
+    const response = await fetch('/api/account/delete', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${data.session.access_token}`
+      },
+      body: JSON.stringify({ confirmEmail: typedEmail })
+    });
+    const result = await response.json().catch(() => ({}));
+    if(!response.ok) throw new Error(result.error || 'Account deletion failed.');
+    await supabaseClient.auth.signOut();
+    location.replace('/index.html?deleted=1');
+  } catch(error){ status.textContent = error.message || 'Account could not be deleted.'; }
+});
+
+async function initializeServices(){
+  if(!window.supabase?.createClient) throw new Error('Supabase library load nahi hui. Internet connection check karein.');
+  supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const statusResponse = await fetch('/api/status');
+  if(!statusResponse.ok || !statusResponse.headers.get('content-type')?.includes('application/json')) {
+    throw new Error('API server nahi chal raha. `node --env-file=.env server.mjs` se ZetaCore start karein.');
+  }
+  const status = await statusResponse.json();
+  modelOptions = status.models || [];
+  refreshModels();
+  const modelCount = Array.isArray(status.models) ? status.models.length : 0;
+  $('#keyCount').textContent = modelCount ? `${modelCount} model${modelCount === 1 ? '' : 's'} ready` : 'no model keys';
+  const { data, error } = await supabaseClient.auth.getSession();
+  if(error) throw error;
+  authSession = data.session;
+  if(!authSession){ location.replace('/index.html'); return; }
+  renderHero(authSession.user);
+  if(authSession.user.user_metadata?.zetacore_deactivated_at){
+    $('#accountName').textContent = 'Inactive account';
+  } else showAccount(authSession.user);
+  try{
+    await loadConversations();
+  } catch(error){
+    console.error('[chat history]', error);
+    toast(error.message || 'Chat history could not be loaded.');
+  }
+  supabaseClient.auth.onAuthStateChange((_event, session) => {
+    authSession = session;
+    if(!session) location.replace('/index.html');
+  });
+}
+
+initializeServices().catch(error => {
+  console.error('[startup]', error);
+  $('#keyCount').textContent = 'server offline';
+  showServiceNotice('ZetaCore is temporarily unavailable. Please try again later.');
+});
+</script>
+</body>
+</html>

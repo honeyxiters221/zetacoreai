@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ZetaCore AI · Login</title>
+<link rel="icon" type="image/svg+xml" href="zetacore-mark.svg">
+<style>
+:root{
+  --bg:#050608;
+  --card:rgba(12,14,19,.68);
+  --surface:rgba(255,255,255,.045);
+  --border:rgba(255,255,255,.12);
+  --border-2:rgba(255,255,255,.23);
+  --text:#f5f7fb;
+  --muted:#9ba3b2;
+  --dim:#6f7786;
+  --ease:cubic-bezier(.2,.8,.2,1);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{min-height:100vh;font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:radial-gradient(ellipse at 15% 15%,#152032 0,transparent 42%),radial-gradient(ellipse at 85% 80%,#1a1426 0,transparent 40%),var(--bg);color:var(--text);display:flex;align-items:center;justify-content:center;overflow-x:hidden;overflow-y:auto;position:relative;-webkit-font-smoothing:antialiased}
+button,input{font-family:inherit}
+
+/* animated backdrop */
+.bg{position:fixed;inset:0;z-index:0;overflow:hidden;isolation:isolate;background:radial-gradient(ellipse at center,rgba(9,13,24,.12),rgba(3,4,8,.68))}
+.grid{position:absolute;inset:-30%;background-image:linear-gradient(rgba(178,200,255,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(178,200,255,.04) 1px,transparent 1px);background-size:58px 58px;mask-image:radial-gradient(ellipse at center,#000 10%,transparent 70%);animation:gridMove 45s linear infinite;transform:perspective(700px) rotateX(9deg) scale(1.08)}
+@keyframes gridMove{to{background-position:116px 58px}}
+.orb{position:absolute;border-radius:50%;filter:blur(75px);animation:drift 22s ease-in-out infinite alternate;will-change:transform}
+.o1{width:min(62vw,760px);height:min(62vw,760px);top:-28%;left:-19%;background:radial-gradient(circle,rgba(30,115,255,.32),rgba(27,65,157,.13) 42%,transparent 70%)}
+.o2{width:min(58vw,700px);height:min(58vw,700px);bottom:-32%;right:-18%;animation-delay:-8s;background:radial-gradient(circle,rgba(142,52,255,.28),rgba(82,38,150,.12) 45%,transparent 70%)}
+.o3{width:min(42vw,520px);height:min(42vw,520px);top:23%;left:44%;animation-delay:-13s;background:radial-gradient(circle,rgba(27,205,255,.18),rgba(24,87,170,.08) 45%,transparent 70%)}
+.o4{width:min(34vw,400px);height:min(34vw,400px);bottom:2%;left:8%;animation-delay:-5s;background:radial-gradient(circle,rgba(70,97,255,.18),transparent 70%)}
+@keyframes drift{0%{transform:translate3d(-4%,2%,0) scale(.88)}50%{transform:translate3d(7%,-5%,0) scale(1.12)}100%{transform:translate3d(-2%,7%,0) scale(.98)}}
+
+/* card */
+.wrap{position:relative;z-index:1;width:100%;max-width:460px;padding:20px;animation:up .9s var(--ease) both}
+@keyframes up{from{opacity:0;transform:translateY(26px) scale(.98)}to{opacity:1;transform:none}}
+.card{background:linear-gradient(145deg,rgba(19,23,36,.79),rgba(8,10,16,.72));backdrop-filter:blur(38px) saturate(155%);-webkit-backdrop-filter:blur(38px) saturate(155%);border:1px solid rgba(191,204,255,.16);border-radius:28px;padding:34px;box-shadow:0 45px 120px -38px rgba(0,0,0,.88),inset 0 1px 0 rgba(255,255,255,.1),0 0 90px rgba(72,112,255,.1);position:relative;overflow:visible;isolation:isolate}
+.card::before{content:"";position:absolute;inset:0;border-radius:inherit;padding:1px;background:linear-gradient(130deg,rgba(107,198,255,.55),transparent 24%,transparent 66%,rgba(173,106,255,.4));mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;z-index:-1}
+.card::after{content:"";position:absolute;inset:1px;border-radius:27px;background:linear-gradient(115deg,rgba(155,188,255,.035),transparent 38%,rgba(159,118,255,.025));pointer-events:none;z-index:-1}
+@keyframes sweep{to{background-position:-250% 0}}
+
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:15px;margin-bottom:30px;animation:fadeIn .8s .1s both}
+.brand-mark{width:38px;height:38px;display:block;object-fit:contain;transition:transform .5s var(--ease),filter .35s}
+.brand:hover .brand-mark{transform:scale(1.08);filter:drop-shadow(0 0 10px rgba(80,120,255,.48))}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+
+h1{font-size:30px;font-weight:800;letter-spacing:-.03em;line-height:1.12;animation:fadeUp .8s .15s var(--ease) both}
+.shine{background:linear-gradient(100deg,#6b6b6b 0%,#fff 35%,#fff 50%,#6b6b6b 70%);background-size:250% auto;-webkit-background-clip:text;background-clip:text;color:transparent;animation:shine 5s linear infinite}
+@keyframes shine{to{background-position:250% center}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.sub{color:var(--muted);font-size:14px;margin:10px 0 28px;min-height:22px}
+.caret::after{content:"";display:inline-block;width:2px;height:1em;background:#fff;margin-left:3px;vertical-align:-2px;animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:0}}
+
+/* floating-label fields */
+.field{position:relative;margin-bottom:14px}
+.field input{width:100%;height:54px;background:rgba(7,10,16,.48);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.12);color:var(--text);border-radius:12px;padding:12px 48px 12px 16px;font-size:15px;outline:none;transition:border-color .3s,box-shadow .3s,background .3s}
+.field input[type=date]{color-scheme:dark}
+.field label{display:block;margin:0 0 7px 3px;color:var(--muted);font-size:12px;font-weight:600;letter-spacing:.025em;line-height:1.2}
+.field input:focus,.field input:not(:placeholder-shown){border-color:rgba(155,184,255,.48)}
+.field input:focus{box-shadow:0 0 0 4px rgba(107,145,255,.1),0 8px 30px rgba(4,9,20,.22);background:rgba(13,19,31,.72)}
+.toggle{position:absolute;right:8px;bottom:11px;background:none;border:none;color:var(--muted);cursor:pointer;width:32px;height:32px;border-radius:8px;display:grid;place-items:center;transition:color .2s,background .2s}
+.toggle:hover{color:var(--text);background:var(--surface)}
+.toggle svg{width:18px;height:18px}
+.toggle[aria-pressed="true"]{color:#c5d4ff}
+.date-field{z-index:3}
+.date-control{position:relative}
+.date-input{cursor:pointer;padding-right:52px!important}
+.dob-hint{margin:7px 2px 0;color:var(--dim);font-size:11px;line-height:1.4}
+.calendar-trigger{position:absolute;right:7px;top:7px;width:40px;height:40px;border:1px solid transparent;border-radius:10px;background:transparent;color:#aebeff;display:grid;place-items:center;cursor:pointer;transition:background .2s,border-color .2s,box-shadow .2s,transform .2s}
+.calendar-trigger:hover,.calendar-trigger[aria-expanded="true"]{background:rgba(117,147,255,.12);border-color:rgba(157,179,255,.2);box-shadow:0 0 22px rgba(83,113,255,.14);transform:translateY(-1px)}
+.calendar-trigger svg{width:19px;height:19px}
+.calendar{position:absolute;left:0;top:calc(100% + 10px);width:min(100%,340px);padding:14px;border:1px solid rgba(177,194,255,.2);border-radius:20px;background:linear-gradient(145deg,rgba(21,26,41,.97),rgba(10,12,20,.97));backdrop-filter:blur(28px) saturate(150%);-webkit-backdrop-filter:blur(28px) saturate(150%);box-shadow:0 24px 70px rgba(0,0,0,.58),inset 0 1px rgba(255,255,255,.08),0 0 34px rgba(91,123,255,.1);z-index:20;transform-origin:top left;animation:calendarIn .2s var(--ease) both}
+.calendar.floating{position:fixed;left:var(--calendar-left);top:var(--calendar-top);bottom:auto;width:min(340px,calc(100vw - 24px));max-height:calc(100vh - 24px);overflow-y:auto;z-index:100;transform-origin:top left}
+.calendar.above{top:auto;bottom:calc(100% + 10px);transform-origin:bottom left}
+.calendar.floating.above{top:var(--calendar-top);bottom:auto;transform-origin:bottom left}
+.calendar[hidden]{display:none}
+@keyframes calendarIn{from{opacity:0;transform:translateY(-5px) scale(.98)}to{opacity:1;transform:none}}
+.calendar-head{display:flex;align-items:center;gap:7px;margin-bottom:12px}
+.calendar-select{min-width:0;height:36px;padding:0 9px;border:1px solid rgba(255,255,255,.09);border-radius:10px;background:rgba(255,255,255,.045);color:#eef1ff;font-weight:650;outline:none;cursor:pointer}
+.calendar-select:focus-visible,.calendar-nav:focus-visible,.calendar-day:focus-visible,.calendar-today:focus-visible{outline:2px solid #9caeff;outline-offset:2px}
+.calendar-select option{background:#111522;color:#eef1ff}
+.calendar-year{width:82px;margin-right:auto}
+.calendar-nav{width:34px;height:34px;border:1px solid rgba(255,255,255,.09);border-radius:10px;background:rgba(255,255,255,.04);color:#cbd4f5;display:grid;place-items:center;cursor:pointer;transition:background .2s,border-color .2s,transform .2s}
+.calendar-nav:hover{background:rgba(125,149,255,.14);border-color:rgba(157,179,255,.25);transform:translateY(-1px)}
+.calendar-nav:disabled{opacity:.32;cursor:not-allowed;transform:none}
+.calendar-week,.calendar-days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;text-align:center}
+.calendar-week{margin-bottom:5px}
+.calendar-week span{color:#80899f;font-size:10px;font-weight:700;text-transform:uppercase;padding:5px 0}
+.calendar-day{height:36px;border:1px solid transparent;border-radius:10px;background:transparent;color:#dce2f5;font-size:12px;cursor:pointer;transition:background .18s,border-color .18s,color .18s,transform .18s}
+.calendar-day:hover:not(:disabled){background:rgba(125,149,255,.16);border-color:rgba(157,179,255,.22);transform:translateY(-1px)}
+.calendar-day.muted{color:#596176}
+.calendar-day.today{border-color:rgba(136,164,255,.42);color:#cbd7ff}
+.calendar-day.selected{background:linear-gradient(135deg,#5478ff,#8b5cff);border-color:transparent;color:white;box-shadow:0 5px 17px rgba(91,106,255,.32)}
+.calendar-day:disabled{opacity:.22;cursor:not-allowed}
+.calendar-foot{display:flex;justify-content:flex-end;border-top:1px solid rgba(255,255,255,.07);margin-top:10px;padding-top:10px}
+.calendar-today{border:0;background:transparent;color:#b7c5ff;font-size:12px;font-weight:650;padding:5px 8px;border-radius:7px;cursor:pointer}
+.calendar-today:hover{background:rgba(125,149,255,.11)}
+
+/* buttons */
+.btn{position:relative;overflow:hidden;width:100%;border:none;border-radius:12px;padding:15px;font-size:15px;font-weight:700;cursor:pointer;transition:transform .2s var(--ease),box-shadow .3s,background .25s,color .25s,border-color .25s;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn:active{transform:scale(.97)}
+.btn::after{content:"";position:absolute;top:-20%;left:-90%;width:48%;height:140%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.62),transparent);transform:skewX(-20deg);transition:left .85s var(--ease);pointer-events:none}
+.btn:hover::after{left:150%}
+.btn-primary{background:rgba(255,255,255,.045);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);color:var(--text);border:1px solid var(--border-2);margin-top:6px;animation:fadeUp .7s .4s var(--ease) both,buttonGlow 4s ease-in-out infinite}
+.btn-primary:hover{transform:translateY(-2px);border-color:rgba(176,197,255,.62);background:rgba(255,255,255,.09);box-shadow:0 14px 38px -8px rgba(126,158,255,.32)}
+@keyframes buttonGlow{0%,100%{box-shadow:0 8px 24px -12px rgba(151,174,255,.24)}50%{box-shadow:0 10px 32px -9px rgba(151,174,255,.42)}}
+.btn-primary.loading{pointer-events:none;color:transparent}
+.btn-primary.loading::before{content:"";position:absolute;width:20px;height:20px;border:2.5px solid #a9bcff;border-right-color:transparent;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.btn-primary.done{background:#e8e8e8}
+.btn-ghost{background:rgba(255,255,255,.045);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);color:var(--text);border:1px solid var(--border);animation:fadeUp .7s .5s var(--ease) both}
+.btn-ghost:hover{background:rgba(255,255,255,.085);border-color:var(--border-2);transform:translateY(-2px);box-shadow:0 10px 26px -10px rgba(151,174,255,.24)}
+.arrow{display:inline-block;transition:transform .35s var(--ease)}
+.btn-ghost:hover .arrow{transform:translateX(4px)}
+.google-btn{margin-top:8px}
+.google-mark{width:19px;height:19px;flex-shrink:0}
+.divider{margin:20px 0}
+.auth-tabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;background:#080808;border:1px solid var(--border);border-radius:11px;margin-bottom:18px}
+.auth-tabs button{border:0;border-radius:8px;background:transparent;color:var(--muted);padding:9px;font-size:13px;font-weight:650}
+.auth-tabs button.active{background:#fff;color:#000}
+.hidden{display:none!important}
+.forgot{display:block;width:max-content;margin:-3px 2px 12px auto;border:0;background:none;color:var(--muted);font-size:12px;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.forgot:hover{color:var(--text)}
+.back-login{margin:12px auto 0}
+.helper{font-size:12px;line-height:1.5;color:var(--muted);text-align:center;margin:10px 0}
+.verification-panel{padding:18px;border:1px solid var(--border);border-radius:14px;background:rgba(255,255,255,.035);text-align:center;backdrop-filter:blur(12px)}
+.verification-icon{width:48px;height:48px;margin:0 auto 12px;border-radius:15px;display:grid;place-items:center;background:rgba(121,155,255,.13);color:#c5d4ff;font-size:22px;box-shadow:inset 0 0 20px rgba(121,155,255,.08)}
+.verification-panel h2{font-size:17px;margin-bottom:6px}
+.verification-panel p{color:var(--muted);font-size:13px;line-height:1.55}
+.verification-panel strong{color:var(--text);overflow-wrap:anywhere}
+.verification-panel .forgot{margin:14px auto 0}
+.shake{animation:shake .45s}
+.err{overflow-wrap:anywhere}
+
+.divider{display:flex;align-items:center;gap:12px;color:var(--dim);font-size:11px;margin:20px 0;text-transform:uppercase;letter-spacing:.14em;animation:fadeIn .8s .45s both}
+.divider::before,.divider::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--border),transparent)}
+
+.err{color:#ff8a8a;font-size:13px;min-height:18px;margin-top:6px;text-align:center}
+.shake{animation:shake .45s}
+@keyframes shake{20%,60%{transform:translateX(-7px)}40%,80%{transform:translateX(7px)}}
+
+.foot{text-align:center;color:var(--dim);font-size:12px;margin-top:24px;animation:fadeIn 1s .6s both}
+
+@media (max-width:480px){.card{padding:26px 22px}.wrap{padding:12px}h1{font-size:26px}}
+.profile-overlay{position:fixed;inset:0;z-index:50;display:grid;place-items:center;padding:20px;background:rgba(3,5,10,.7);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);animation:fadeIn .25s both}
+.profile-overlay.hidden{display:none}
+.profile-card{width:min(100%,440px);max-height:min(92vh,760px);overflow-y:auto;padding:30px;border:1px solid rgba(191,204,255,.2);border-radius:24px;background:linear-gradient(145deg,rgba(19,23,36,.97),rgba(8,10,16,.97));box-shadow:0 35px 100px rgba(0,0,0,.65),0 0 70px rgba(72,112,255,.12)}
+.profile-card h2{font-size:23px;letter-spacing:-.025em}
+.profile-card>p{margin:8px 0 22px;color:var(--muted);font-size:13px;line-height:1.55}
+.profile-card .brand{margin-bottom:22px}
+.profile-card .field select{width:100%;height:54px;padding:0 16px;border:1px solid rgba(255,255,255,.12);border-radius:12px;background:rgba(7,10,16,.65);color:var(--text);font-size:15px;outline:none}
+.profile-card .field select:focus{border-color:rgba(155,184,255,.48);box-shadow:0 0 0 4px rgba(107,145,255,.1)}
+.profile-card .field select option{background:#111522;color:var(--text)}
+.profile-card .btn-primary{margin-top:8px}
+.profile-error{min-height:18px;margin-top:10px;color:#ff8a8a;font-size:13px;text-align:center}
+@media (max-width:480px){.profile-card{padding:24px 20px;border-radius:20px}}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
+</style>
+</head>
+<body>
+<div class="bg" aria-hidden="true"><div class="grid"></div><div class="orb o1"></div><div class="orb o2"></div><div class="orb o3"></div><div class="orb o4"></div></div>
+
+<div class="wrap">
+  <div class="card" id="card">
+    <div class="brand"><img class="brand-mark" src="zetacore-mark.svg" alt="">ZetaCore AI</div>
+    <h1>Question <span class="shine">what's next.</span></h1>
+    <p class="sub" id="sub"></p>
+
+    <button class="btn btn-ghost google-btn" id="google" type="button">
+      <svg class="google-mark" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 24.5c0-1.4-.1-2.8-.4-4.1H24v7.8h11a9.4 9.4 0 0 1-4.1 6.2v5.1h6.7c3.9-3.6 6-8.8 6-15Z"/><path fill="#FF3D00" d="M24 44c5.5 0 10.1-1.8 13.5-4.9l-6.7-5.1c-1.8 1.2-4 1.9-6.8 1.9-5.2 0-9.6-3.5-11.2-8.2H5.9v5.2A20 20 0 0 0 24 44Z"/><path fill="#4CAF50" d="M12.8 27.7a12 12 0 0 1 0-7.4v-5.2H5.9a20 20 0 0 0 0 17.8l6.9-5.2Z"/><path fill="#1976D2" d="M24 12.1c3 0 5.7 1 7.8 3.1l5.9-5.9A19.7 19.7 0 0 0 24 4 20 20 0 0 0 5.9 15.1l6.9 5.2c1.6-4.7 6-8.2 11.2-8.2Z"/></svg>
+      Continue with Google
+    </button>
+    <div class="divider">or continue with email</div>
+    <div class="auth-tabs" role="tablist" aria-label="Email authentication">
+      <button id="loginTab" class="active" type="button" role="tab" aria-selected="true">Log in</button>
+      <button id="signupTab" type="button" role="tab" aria-selected="false">Sign up</button>
+    </div>
+    <form id="form" autocomplete="on">
+      <div class="field hidden" id="nameField">
+        <label for="fullName">Full name</label>
+        <input type="text" id="fullName" placeholder=" " autocomplete="name">
+      </div>
+      <div class="field date-field hidden" id="dobField">
+        <label for="dob">Date of birth</label>
+        <div class="date-control">
+          <input class="date-input" type="text" id="dob" placeholder="Select your date of birth" autocomplete="bday" readonly aria-haspopup="dialog" aria-expanded="false" aria-controls="dateCalendar">
+          <button class="calendar-trigger" id="calendarTrigger" type="button" aria-label="Choose date of birth" aria-expanded="false" aria-controls="dateCalendar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M16 3v4M8 3v4M3 10h18"/><path d="m8 15 2 2 5-5"/></svg>
+          </button>
+          <div class="calendar" id="dateCalendar" role="dialog" aria-label="Choose date of birth" hidden>
+            <div class="calendar-head">
+              <select class="calendar-select" id="calendarMonth" aria-label="Month"></select>
+              <select class="calendar-select calendar-year" id="calendarYear" aria-label="Year"></select>
+              <button class="calendar-nav" id="calendarPrev" type="button" aria-label="Previous month"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg></button>
+              <button class="calendar-nav" id="calendarNext" type="button" aria-label="Next month"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></button>
+            </div>
+            <div class="calendar-week" aria-hidden="true"><span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span></div>
+            <div class="calendar-days" id="calendarDays"></div>
+            <div class="calendar-foot"><button class="calendar-today" id="calendarToday" type="button">13-year threshold</button></div>
+          </div>
+        </div>
+        <p class="dob-hint">You must be at least 13 years old.</p>
+      </div>
+      <div class="field" id="emailField">
+        <label for="email">Email address</label>
+        <input type="email" id="email" placeholder=" " autocomplete="email" required>
+      </div>
+      <div class="field" id="passwordField">
+        <label for="password">Password</label>
+        <input type="password" id="password" placeholder=" " autocomplete="current-password" required>
+        <button type="button" class="toggle" id="toggle" aria-label="Show passwords" aria-pressed="false" title="Show passwords">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </div>
+      <div class="field hidden" id="confirmField">
+        <label for="confirmPassword">Repeat password</label>
+        <input type="password" id="confirmPassword" placeholder=" " autocomplete="new-password">
+        <button type="button" class="toggle" id="toggleConfirm" aria-label="Show passwords" aria-pressed="false" title="Show passwords">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 12s4-7 11-7 11 7 11 7S18 5 12 5 1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </div>
+      <button class="forgot" id="forgot" type="button">Forgot password?</button>
+      <p class="helper hidden" id="authHelp"></p>
+      <button class="btn btn-primary" id="submit" type="submit">Log in <span class="arrow">→</span></button>
+      <section class="verification-panel hidden" id="verificationPanel" aria-live="polite">
+        <div class="verification-icon" aria-hidden="true">✉</div>
+        <h2>Confirm your email</h2>
+        <p>We sent a confirmation link to<br><strong id="verificationEmail"></strong></p>
+        <p>Open the email and select <strong>Confirm your email address</strong>. You can sign in after your email is confirmed.</p>
+        <button class="forgot" id="resendEmail" type="button">Resend confirmation email</button>
+      </section>
+      <button class="forgot back-login hidden" id="backLogin" type="button">Back to log in</button>
+      <div class="err" id="err" role="status" aria-live="polite"></div>
+    </form>
+  </div>
+  <div class="foot">Secured neural workspace · ZetaCore AI</div>
+</div>
+
+<div class="profile-overlay hidden" id="googleProfileOverlay">
+  <section class="profile-card" role="dialog" aria-modal="true" aria-labelledby="profileTitle">
+    <div class="brand"><img class="brand-mark" src="zetacore-mark.svg" alt="">ZetaCore AI</div>
+    <h2 id="profileTitle">Complete your profile</h2>
+    <p>Add a few details to finish setting up your account. Your Google account is connected.</p>
+    <form id="googleProfileForm">
+      <div id="googleProfileFields"></div>
+      <div class="field">
+        <label for="profileGender">Gender</label>
+        <select id="profileGender" required>
+          <option value="">Select an option</option>
+          <option value="female">Female</option>
+          <option value="male">Male</option>
+          <option value="non_binary">Non-binary</option>
+          <option value="prefer_not_to_say">Prefer not to say</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" id="profileSubmit" type="submit">Confirm and continue <span class="arrow">→</span></button>
+      <div class="profile-error" id="profileError" role="status" aria-live="polite"></div>
+    </form>
+  </section>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const $ = s => document.querySelector(s);
+const SUPABASE_URL = 'https://dlidztiuttjwloyvdyeb.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRsaWR6dGl1dHRqd2xveXZkeWViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI0MjE0MzgsImV4cCI6MjEwNzk5NzQzOH0.Y-SNDQ2qgqCHg9jKXCA5put6kvIbVB4ZAzf5qyppxuI';
+const supabaseClient = window.supabase?.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+let authMode = 'login', verificationEmail = '';
+const fields = {
+  name: $('#nameField'), dob: $('#dobField'), email: $('#emailField'),
+  password: $('#passwordField'), confirm: $('#confirmField')
+};
+const calendar = $('#dateCalendar');
+const monthSelect = $('#calendarMonth');
+const yearSelect = $('#calendarYear');
+const today = new Date();
+const todayIso = toIsoDate(today);
+const minimumAge = 13;
+const latestEligibleDobYear = today.getFullYear() - minimumAge;
+const latestEligibleDobDay = Math.min(
+  today.getDate(),
+  new Date(latestEligibleDobYear, today.getMonth() + 1, 0).getDate()
+);
+const latestEligibleDob = new Date(latestEligibleDobYear, today.getMonth(), latestEligibleDobDay);
+const latestEligibleDobIso = toIsoDate(latestEligibleDob);
+const earliestEligibleDobIso = '1900-01-01';
+const earliestCalendarYear = 1900;
+const latestEligibleDobMonth = latestEligibleDob.getFullYear() * 12 + latestEligibleDob.getMonth();
+const calendarHome = calendar.parentElement;
+let selectedDob = '';
+let calendarMonth = new Date(latestEligibleDob.getFullYear(), latestEligibleDob.getMonth(), 1);
+let calendarWasOpen = false;
+
+function toIsoDate(date){
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${date.getFullYear()}-${month}-${day}`;
+}
+
+function isValidDob(iso){
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(iso || '')) return false;
+  const date = new Date(`${iso}T12:00:00`);
+  return !Number.isNaN(date.getTime())
+    && toIsoDate(date) === iso
+    && iso >= earliestEligibleDobIso
+    && iso <= latestEligibleDobIso
+    && iso <= todayIso;
+}
+
+const monthNames = Array.from({ length: 12 }, (_, index) =>
+  new Intl.DateTimeFormat('en', { month: 'long' }).format(new Date(2020, index, 1))
+);
+monthNames.forEach((name, index) => monthSelect.add(new Option(name, String(index))));
+for(let year = latestEligibleDob.getFullYear(); year >= earliestCalendarYear; year--){
+  yearSelect.add(new Option(String(year), String(year)));
+}
+
+function renderCalendar(){
+  monthSelect.value = String(calendarMonth.getMonth());
+  yearSelect.value = String(calendarMonth.getFullYear());
+  const displayedMonth = calendarMonth.getFullYear() * 12 + calendarMonth.getMonth();
+  $('#calendarNext').disabled = displayedMonth >= latestEligibleDobMonth;
+  $('#calendarPrev').disabled = displayedMonth <= earliestCalendarYear * 12;
+  for(const option of monthSelect.options){
+    const year = Number(yearSelect.value);
+    const month = Number(option.value);
+    option.disabled = year === latestEligibleDob.getFullYear() && month > latestEligibleDob.getMonth();
+  }
+  const year = calendarMonth.getFullYear();
+  const month = calendarMonth.getMonth();
+  const firstWeekday = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const previousMonthDays = new Date(year, month, 0).getDate();
+  const days = $('#calendarDays');
+  days.replaceChildren();
+
+  for(let cell = 0; cell < 42; cell++){
+    let dateYear = year, dateMonth = month, day, isOutside = false;
+    if(cell < firstWeekday){
+      dateMonth--;
+      if(dateMonth < 0){ dateMonth = 11; dateYear--; }
+      day = previousMonthDays - firstWeekday + cell + 1;
+      isOutside = true;
+    } else if(cell >= firstWeekday + daysInMonth){
+      dateMonth++;
+      if(dateMonth > 11){ dateMonth = 0; dateYear++; }
+      day = cell - firstWeekday - daysInMonth + 1;
+      isOutside = true;
+    } else {
+      day = cell - firstWeekday + 1;
+    }
+    const date = new Date(dateYear, dateMonth, day);
+    const iso = toIsoDate(date);
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'calendar-day';
+    button.textContent = String(day);
+    button.dataset.date = iso;
+    button.setAttribute('aria-label', new Intl.DateTimeFormat('en', {
+      dateStyle: 'full'
+    }).format(date));
+    if(isOutside) button.classList.add('muted');
+    if(iso === todayIso) button.classList.add('today');
+    if(iso === selectedDob) {
+      button.classList.add('selected');
+      button.setAttribute('aria-pressed', 'true');
+    }
+    button.disabled = iso > latestEligibleDobIso || iso < earliestEligibleDobIso;
+    days.appendChild(button);
+  }
+}
+
+function positionCalendar(){
+  if(!calendarWasOpen) return;
+  const anchor = $('#dob').getBoundingClientRect();
+  const bounds = calendar.getBoundingClientRect();
+  const width = Math.min(340, window.innerWidth - 24);
+  const left = Math.max(12, Math.min(anchor.left, window.innerWidth - width - 12));
+  const roomBelow = window.innerHeight - anchor.bottom;
+  const roomAbove = anchor.top;
+  let top = roomBelow >= bounds.height + 12
+    ? anchor.bottom + 10
+    : roomAbove >= bounds.height + 12
+      ? anchor.top - bounds.height - 10
+      : Math.max(12, Math.min(anchor.bottom + 10, window.innerHeight - bounds.height - 12));
+  calendar.style.setProperty('--calendar-left', `${left}px`);
+  calendar.style.setProperty('--calendar-top', `${top}px`);
+  calendar.classList.toggle('above', top < anchor.top);
+}
+
+function setCalendarOpen(open){
+  if(open && !calendarWasOpen){
+    document.body.appendChild(calendar);
+    calendar.classList.add('floating');
+  }
+  calendar.hidden = !open;
+  $('#dob').setAttribute('aria-expanded', String(open));
+  $('#calendarTrigger').setAttribute('aria-expanded', String(open));
+  if(open){
+    renderCalendar();
+    calendarWasOpen = true;
+    positionCalendar();
+  } else {
+    calendar.classList.remove('above');
+    calendar.classList.remove('floating');
+    calendar.style.removeProperty('--calendar-left');
+    calendar.style.removeProperty('--calendar-top');
+    if(calendar.parentElement === document.body) calendarHome.appendChild(calendar);
+  }
+  calendarWasOpen = open;
+}
+
+function chooseDob(iso){
+  selectedDob = iso;
+  displayDob(iso);
+  setCalendarOpen(false);
+}
+
+function displayDob(iso){
+  $('#dob').value = iso
+    ? new Intl.DateTimeFormat('en', {
+      year: 'numeric', month: 'long', day: 'numeric'
+    }).format(new Date(`${iso}T12:00:00`))
+    : '';
+  $('#dob').dataset.isoDate = iso || '';
+}
+
+$('#dob').addEventListener('click', () => setCalendarOpen(!calendarWasOpen));
+$('#calendarTrigger').addEventListener('click', () => setCalendarOpen(!calendarWasOpen));
+$('#calendarPrev').addEventListener('click', () => {
+  calendarMonth = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() - 1, 1);
+  renderCalendar();
+});
+$('#calendarNext').addEventListener('click', () => {
+  if($('#calendarNext').disabled) return;
+  calendarMonth = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1, 1);
+  renderCalendar();
+});
+monthSelect.addEventListener('change', () => {
+  const month = Number(monthSelect.value);
+  calendarMonth = new Date(calendarMonth.getFullYear(), month, 1);
+  renderCalendar();
+});
+yearSelect.addEventListener('change', () => {
+  const year = Number(yearSelect.value);
+  const month = Math.min(
+    calendarMonth.getMonth(),
+    year === latestEligibleDob.getFullYear() ? latestEligibleDob.getMonth() : 11
+  );
+  calendarMonth = new Date(year, month, 1);
+  renderCalendar();
+});
+$('#calendarDays').addEventListener('click', event => {
+  const day = event.target.closest('[data-date]');
+  if(day && !day.disabled) chooseDob(day.dataset.date);
+});
+$('#calendarToday').addEventListener('click', () => {
+  calendarMonth = new Date(latestEligibleDob.getFullYear(), latestEligibleDob.getMonth(), 1);
+  chooseDob(latestEligibleDobIso);
+});
+document.addEventListener('pointerdown', event => {
+  if(!fields.dob.contains(event.target) && !calendar.contains(event.target)) setCalendarOpen(false);
+});
+window.addEventListener('resize', positionCalendar);
+window.addEventListener('scroll', positionCalendar, true);
+document.addEventListener('keydown', event => {
+  if(event.key === 'Escape' && !calendar.hidden){
+    setCalendarOpen(false);
+    $('#calendarTrigger').focus();
+  }
+});
+
+function showMessage(message, isError = false){
+  const element = $('#err');
+  element.textContent = message;
+  element.style.color = isError ? '#ff8a8a' : '#a8e6b0';
+}
+
+function hasCompleteProfile(user){
+  const metadata = user.user_metadata || {};
+  return Boolean(
+    typeof (metadata.full_name || metadata.name) === 'string'
+    && (metadata.full_name || metadata.name).trim()
+    && isValidDob(metadata.date_of_birth)
+    && metadata.gender
+  );
+}
+
+async function reactivateIfNeeded(user){
+  if(!user.user_metadata?.zetacore_deactivated_at) return false;
+  const { error } = await supabaseClient.auth.updateUser({
+    data: { ...user.user_metadata, zetacore_deactivated_at: null }
+  });
+  if(error) throw error;
+  return true;
+}
+
+function showGoogleProfile(user){
+  const metadata = user.user_metadata || {};
+  const fullName = metadata.full_name || metadata.name || '';
+  const dateOfBirth = isValidDob(metadata.date_of_birth)
+    ? metadata.date_of_birth : '';
+  $('#googleProfileFields').append(fields.name, fields.dob);
+  fields.name.classList.remove('hidden');
+  fields.dob.classList.remove('hidden');
+  $('#fullName').value = fullName;
+  $('#fullName').required = true;
+  $('#dob').required = true;
+  selectedDob = dateOfBirth;
+  displayDob(dateOfBirth);
+  calendarMonth = dateOfBirth
+    ? new Date(`${dateOfBirth}T12:00:00`)
+    : new Date(latestEligibleDob.getFullYear(), latestEligibleDob.getMonth(), 1);
+  $('#profileGender').value = metadata.gender || '';
+  $('#googleProfileOverlay').classList.remove('hidden');
+  $('#fullName').focus();
+}
+
+function setMode(nextMode){
+  authMode = nextMode;
+  setCalendarOpen(false);
+  const signup = nextMode === 'signup';
+  const verify = nextMode === 'verify';
+  const recovery = nextMode === 'recovery';
+  const forgot = nextMode === 'forgot';
+  $('#loginTab').classList.toggle('active', nextMode === 'login');
+  $('#signupTab').classList.toggle('active', signup);
+  $('#loginTab').setAttribute('aria-selected', String(nextMode === 'login'));
+  $('#signupTab').setAttribute('aria-selected', String(signup));
+  document.querySelector('.auth-tabs').classList.toggle('hidden', verify || recovery || forgot);
+  fields.name.classList.toggle('hidden', !signup);
+  fields.dob.classList.toggle('hidden', !signup);
+  fields.email.classList.toggle('hidden', verify || recovery);
+  fields.password.classList.toggle('hidden', forgot || verify);
+  fields.confirm.classList.toggle('hidden', !(signup || recovery));
+  $('#verificationPanel').classList.toggle('hidden', !verify);
+  $('#password').autocomplete = signup || recovery ? 'new-password' : 'current-password';
+  $('#password').required = !forgot && !verify;
+  $('#confirmPassword').required = signup || recovery;
+  $('#confirmPassword').setCustomValidity('');
+  $('#password').type = 'password';
+  $('#confirmPassword').type = 'password';
+  updatePasswordToggle(false);
+  $('#fullName').required = signup;
+  $('#dob').required = signup;
+  $('#email').required = !verify && !recovery;
+  $('#forgot').classList.toggle('hidden', nextMode !== 'login');
+  $('#submit').classList.toggle('hidden', verify);
+  $('#backLogin').classList.toggle('hidden', !(verify || recovery || forgot));
+  $('#authHelp').classList.toggle('hidden', !(verify || recovery || forgot));
+  $('#authHelp').textContent = recovery
+    ? 'Choose a new password for your account.'
+    : forgot ? 'We will send a secure password reset link to your email.' : '';
+  $('#verificationEmail').textContent = verificationEmail;
+  $('#google').classList.toggle('hidden', verify || recovery || forgot);
+  const labels = {
+    login: 'Log in', signup: 'Create account',
+    recovery: 'Save new password', forgot: 'Send reset link'
+  };
+  if(labels[nextMode]) $('#submit').innerHTML = `${labels[nextMode]} <span class="arrow">→</span>`;
+  showMessage('');
+}
+
+function setBusy(busy){
+  const button = $('#submit');
+  button.disabled = busy;
+  button.classList.toggle('loading', busy);
+}
+
+function updatePasswordToggle(visible){
+  const icon = visible
+    ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3l18 18"/><path d="M10.6 10.6a2 2 0 0 0 2.8 2.8"/><path d="M9.9 5.2A10.8 10.8 0 0 1 12 5c6.4 0 10 7 10 7a16 16 0 0 1-3 3.8M6.2 6.2C3.5 8 2 12 2 12s3.6 7 10 7c1.4 0 2.6-.3 3.7-.8"/></svg>'
+    : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>';
+  for(const button of [$('#toggle'), $('#toggleConfirm')]){
+    button.innerHTML = icon;
+    button.setAttribute('aria-pressed', String(visible));
+    button.setAttribute('aria-label', visible ? 'Hide passwords' : 'Show passwords');
+    button.title = visible ? 'Hide passwords' : 'Show passwords';
+  }
+}
+
+/* typewriter subtitle */
+const lines = [
+  'Your workspace for ambitious ideas and engineering.',
+  'Intelligent model routing. Built for what comes next.'
+];
+let li = 0, ci = 0, del = false;
+function type(){
+  const el = $('#sub');
+  const t = lines[li];
+  el.textContent = del ? t.slice(0, --ci) : t.slice(0, ++ci);
+  el.classList.add('caret');
+  let speed = del ? 18 : 42;
+  if(!del && ci === t.length){ speed = 2200; del = true; }
+  else if(del && ci === 0){ del = false; li = (li + 1) % lines.length; speed = 300; }
+  setTimeout(type, speed);
+}
+type();
+
+/* password visibility */
+$('#toggle').addEventListener('click', () => {
+  const visible = $('#password').type !== 'text';
+  $('#password').type = visible ? 'text' : 'password';
+  $('#confirmPassword').type = visible ? 'text' : 'password';
+  updatePasswordToggle(visible);
+});
+$('#toggleConfirm').addEventListener('click', () => {
+  const visible = $('#password').type !== 'text';
+  $('#password').type = visible ? 'text' : 'password';
+  $('#confirmPassword').type = visible ? 'text' : 'password';
+  updatePasswordToggle(visible);
+});
+
+/* ripple on buttons */
+document.querySelectorAll('.btn, .toggle').forEach(b => {
+  b.addEventListener('click', e => {
+    const r = b.getBoundingClientRect();
+    const s = Math.max(r.width, r.height);
+    const dot = document.createElement('span');
+    dot.style.cssText = `position:absolute;border-radius:50%;background:rgba(128,128,128,.35);pointer-events:none;width:${s}px;height:${s}px;left:${e.clientX - r.left - s/2}px;top:${e.clientY - r.top - s/2}px;transform:scale(0);animation:ripple .6s linear`;
+    b.appendChild(dot);
+    setTimeout(() => dot.remove(), 600);
+  });
+});
+
+/* submit */
+$('#form').addEventListener('submit', async e => {
+  e.preventDefault();
+  const email = $('#email').value.trim();
+  const password = $('#password').value;
+  setBusy(true);
+  try{
+    if(!supabaseClient) throw new Error('The authentication service could not be loaded. Check your internet connection and try again.');
+    if(authMode === 'signup'){
+      const fullName = $('#fullName').value.trim();
+      const dateOfBirth = selectedDob;
+      if(!fullName) throw new Error('Enter your full name.');
+      if(!dateOfBirth) throw new Error('Enter your date of birth.');
+      if(!isValidDob(dateOfBirth)) throw new Error('You must be at least 13 years old to use ZetaCore AI.');
+      if(password.length < 8) throw new Error('Your password must be at least 8 characters long.');
+      if(password !== $('#confirmPassword').value) throw new Error('The passwords do not match.');
+      const { data, error } = await supabaseClient.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { full_name: fullName, date_of_birth: dateOfBirth },
+          emailRedirectTo: `${location.origin}/index.html?verified=1`
+        }
+      });
+      if(error) throw error;
+      if(data.session) {
+        await supabaseClient.auth.signOut();
+        throw new Error('Email confirmation is disabled in Supabase. Enable it under Authentication → Providers → Email before allowing sign-up.');
+      }
+      verificationEmail = email;
+      $('#verificationEmail').textContent = email;
+      $('#password').value = '';
+      $('#confirmPassword').value = '';
+      setMode('verify');
+      return;
+    }
+    if(authMode === 'forgot'){
+      const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+        redirectTo: `${location.origin}/index.html?recovery=1`
+      });
+      if(error) throw error;
+      showMessage('Password reset link sent. Check your inbox and spam folder.');
+      return;
+    }
+    if(authMode === 'recovery'){
+      if(password.length < 8) throw new Error('Your password must be at least 8 characters long.');
+      if(password !== $('#confirmPassword').value) throw new Error('The passwords do not match.');
+      const { error } = await supabaseClient.auth.updateUser({ password });
+      if(error) throw error;
+      location.replace('/dashboard.html');
+      return;
+    }
+    if(password.length < 8) throw new Error('Your password must be at least 8 characters long.');
+    const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+    if(error) throw error;
+    const reactivated = await reactivateIfNeeded(data.user);
+    if(reactivated) showMessage('Your account has been reactivated.');
+    location.replace('/dashboard.html');
+  } catch(error){
+    showMessage(error.message || 'The request could not be completed.', true);
+  } finally{
+    setBusy(false);
+  }
+});
+
+$('#googleProfileForm').addEventListener('submit', async event => {
+  event.preventDefault();
+  const fullName = $('#fullName').value.trim();
+  const dateOfBirth = selectedDob;
+  const gender = $('#profileGender').value;
+  const submitButton = $('#profileSubmit');
+  $('#profileError').textContent = '';
+  if(!fullName || !isValidDob(dateOfBirth) || !gender){
+    $('#profileError').textContent = !isValidDob(dateOfBirth)
+      ? 'You must be at least 13 years old to use ZetaCore AI.'
+      : 'Complete all profile fields to continue.';
+    return;
+  }
+  submitButton.disabled = true;
+  submitButton.classList.add('loading');
+  try{
+    if(!supabaseClient) throw new Error('The authentication service could not be loaded. Check your internet connection and try again.');
+    const { data, error } = await supabaseClient.auth.getUser();
+    if(error) throw error;
+    if(!data.user) throw new Error('Your Google sign-in session has expired. Please sign in again.');
+    const { error: updateError } = await supabaseClient.auth.updateUser({
+      data: {
+        ...data.user.user_metadata,
+        full_name: fullName,
+        date_of_birth: dateOfBirth,
+        gender
+      }
+    });
+    if(updateError) throw updateError;
+    location.replace('/dashboard.html');
+  } catch(error){
+    $('#profileError').textContent = error.message || 'Your profile could not be saved.';
+    submitButton.disabled = false;
+    submitButton.classList.remove('loading');
+  }
+});
+
+$('#loginTab').addEventListener('click', () => setMode('login'));
+$('#signupTab').addEventListener('click', () => setMode('signup'));
+$('#forgot').addEventListener('click', () => setMode('forgot'));
+$('#backLogin').addEventListener('click', () => setMode('login'));
+$('#resendEmail').addEventListener('click', async () => {
+  if(!supabaseClient || !verificationEmail) return;
+  setBusy(true);
+  try{
+    const { error } = await supabaseClient.auth.resend({
+      type: 'signup',
+      email: verificationEmail,
+      options: { emailRedirectTo: `${location.origin}/index.html?verified=1` }
+    });
+    if(error) throw error;
+    showMessage('A new confirmation email has been sent.');
+  } catch(error){
+    showMessage(error.message || 'The confirmation email could not be resent.', true);
+  } finally{
+    setBusy(false);
+  }
+});
+
+$('#google').addEventListener('click', async () => {
+  $('#err').textContent = '';
+  try{
+    if(!supabaseClient) throw new Error('The authentication service could not be loaded. Check your internet connection and try again.');
+    if(location.protocol === 'file:') throw new Error('Google sign-in requires the ZetaCore server. Start it with `node --env-file=.env server.mjs`, then open http://localhost:3000.');
+    const { error } = await supabaseClient.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${location.origin}/index.html?oauth=1`,
+        queryParams: { prompt: 'select_account' }
+      }
+    });
+    if(error) throw error;
+  } catch(error){
+    showMessage(error.message || 'Google sign-in could not be completed.', true);
+  }
+});
+
+$('#password').addEventListener('input', () => {
+  validatePasswordMatch();
+});
+$('#confirmPassword').addEventListener('input', () => {
+  validatePasswordMatch();
+});
+function validatePasswordMatch(){
+  const comparesPasswords = authMode === 'signup' || authMode === 'recovery';
+  const mismatch = comparesPasswords && $('#confirmPassword').value !== $('#password').value;
+  $('#confirmPassword').setCustomValidity(mismatch ? 'Passwords do not match' : '');
+}
+if(supabaseClient){
+  supabaseClient.auth.onAuthStateChange((event, session) => {
+    if(event === 'PASSWORD_RECOVERY' && session) setMode('recovery');
+  });
+  supabaseClient.auth.getSession().then(async ({ data, error }) => {
+    if(error) throw error;
+    const callbackUrl = new URL(location.href);
+    const oauthCallback = callbackUrl.searchParams.get('oauth') === '1';
+    const oauthError = callbackUrl.searchParams.get('error_description')
+      || new URLSearchParams(callbackUrl.hash.slice(1)).get('error_description');
+    if(oauthCallback){
+      history.replaceState(null, '', `${callbackUrl.pathname}${callbackUrl.hash}`);
+      if(oauthError) throw new Error(oauthError);
+      if(!data.session) throw new Error('Google sign-in did not return an active session. Please try again.');
+      const reactivated = await reactivateIfNeeded(data.session.user);
+      setMode('login');
+      if(hasCompleteProfile(data.session.user)) location.replace('/dashboard.html');
+      else showGoogleProfile(data.session.user);
+      if(reactivated) showMessage('Your account has been reactivated.');
+      return;
+    }
+    if(location.search.includes('verified=1')){
+      const confirmedUser = data.session?.user;
+      const confirmedEmail = confirmedUser?.email_confirmed_at ? confirmedUser.email || '' : '';
+      if(data.session) supabaseClient.auth.signOut().catch(signOutError => showMessage(signOutError.message, true));
+      $('#email').value = confirmedEmail || verificationEmail;
+      setMode('login');
+      if(confirmedEmail) showMessage('Your email address has been confirmed. You can now log in.');
+      else showMessage('We could not confirm this email link. Request a new confirmation email and try again.', true);
+      history.replaceState(null, '', '/index.html');
+    } else if(data.session && location.search.includes('recovery=1')) setMode('recovery');
+    else if(data.session){
+      await reactivateIfNeeded(data.session.user);
+      location.replace('/dashboard.html');
+    } else if(location.search.includes('deactivated=1')) {
+      showMessage('Your account is temporarily deactivated. Sign in again to reactivate it.');
+      history.replaceState(null, '', '/index.html');
+    } else if(location.search.includes('deleted=1')){
+      showMessage('Your account has been permanently deleted.');
+      history.replaceState(null, '', '/index.html');
+    }
+  }).catch(error => showMessage(error.message || 'Your session could not be checked.', true));
+} else {
+  showMessage('The authentication service could not be loaded. Check your internet connection.', true);
+}
+setMode(location.search.includes('recovery=1') ? 'recovery' : 'login');
+</script>
+</body>
+</html>
