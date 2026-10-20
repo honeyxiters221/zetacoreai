@@ -440,7 +440,7 @@ async function serveStatic(pathname, response) {
   } catch {
     return send(response, 400, 'text/plain', 'Invalid path');
   }
-  if (!['dashboard.html', 'index.html', 'zetacore-mark.svg'].includes(relativePath)) return send(response, 404, 'text/plain', 'Not found');
+  if (!['dashboard.html', 'index.html', 'terms.html', 'zetacore-mark.svg'].includes(relativePath)) return send(response, 404, 'text/plain', 'Not found');
   try {
     const file = resolve(ROOT, relativePath);
     const data = await readFile(file);

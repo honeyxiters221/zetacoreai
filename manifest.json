@@ -1,0 +1,19 @@
+{
+  "name": "ZetaCore AI",
+  "short_name": "ZetaCore",
+  "description": "AI workspace for coding help, project planning, and technical conversations.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#090a10",
+  "theme_color": "#050608",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/zetacore-mark.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

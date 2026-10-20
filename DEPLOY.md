@@ -12,6 +12,7 @@
    Never put provider keys in frontend code or commit them to Git.
 5. Trigger a new deployment after pushing changes or changing environment variables.
 6. In Supabase **Authentication > URL Configuration**, set the Site URL to the Vercel deployment URL and add its `/index.html` URL (including the app's redirect query strings) to allowed redirect URLs. Keep the Google OAuth provider's callback URI set to the Supabase callback URL shown in Supabase.
+7. The public sign-in page links to `/terms.html`. Email sign-up and sign-in require acceptance; the acceptance timestamp is saved in Supabase user metadata. Google sign-in also requires the checkbox and records acceptance after the OAuth redirect.
 
 ## Netlify
 

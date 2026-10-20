@@ -2,9 +2,11 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>ZetaCore AI</title>
 <meta name="robots" content="noindex,follow">
+<meta name="theme-color" content="#090a10">
+<link rel="manifest" href="/manifest.json">
 <link rel="icon" type="image/svg+xml" href="zetacore-mark.svg">
 <style>
 :root{
@@ -1679,6 +1681,13 @@ initializeServices().catch(error => {
   $('#keyCount').textContent = 'server offline';
   showServiceNotice('ZetaCore is temporarily unavailable. Please try again later.');
 });
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/service-worker.js').catch(() => {});
+  });
+}
 </script>
 </body>
 </html>
