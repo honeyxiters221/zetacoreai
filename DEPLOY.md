@@ -20,3 +20,7 @@ Netlify remains supported through `netlify.toml` and `netlify/functions/api.mjs`
 Both providers host the HTML statically and invoke the API on requests; neither runs the local Node HTTP server continuously. Netlify's buffered function request/response payload limit is 6 MB, so large image attachments may exceed that limit.
 
 Automatic model selection uses the configured Gemini route and two known text-chat OpenRouter fallbacks. It does not fetch the OpenRouter model catalog during cold start or route requests to audio/video models. Provider attempts time out after 10 seconds before the next provider is tried.
+
+## Google Search
+
+The public login page has basic search metadata and structured data; the signed-in dashboard is marked `noindex`. `robots.txt` and `sitemap.xml` help crawlers discover the public root page. After deploying, add `https://zetacoreai.vercel.app/` as a URL-prefix property in [Google Search Console](https://search.google.com/search-console/), complete its ownership verification, submit `https://zetacoreai.vercel.app/sitemap.xml`, then use URL Inspection to request indexing for the root URL. Indexing and ranking take time, and Google does not guarantee a first-place result. A useful public landing page with original details about the product will give search engines more content to evaluate than a sign-in page alone.
